@@ -10,13 +10,8 @@ import { CreditoResponseDto } from '../models/credito-response.dto';
 })
 export class CreditoService {
   private readonly http = inject(HttpClient);
-  private readonly apiUrl = '/api'; // Ajuste conforme necessário
+  private readonly apiUrl = '/api';
 
-  /**
-   * Busca créditos por número de NFSe
-   * @param numeroNfse Número da NFSe para busca
-   * @returns Observable com array de créditos encontrados
-   */
   buscarPorNumeroNfse(numeroNfse: string): Observable<CreditoResponseDto[]> {
     if (!numeroNfse || numeroNfse.trim() === '') {
       return throwError(() => new Error('Número da NFSe é obrigatório'));
@@ -30,19 +25,12 @@ export class CreditoService {
     );
   }
 
-  /**
-   * Trata erros HTTP de forma centralizada
-   * @param error Erro HTTP recebido
-   * @returns Observable com erro tratado
-   */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Erro ao buscar créditos';
 
     if (error.error instanceof ErrorEvent) {
-      // Erro do lado do cliente
       errorMessage = `Erro: ${error.error.message}`;
     } else {
-      // Erro do lado do servidor
       switch (error.status) {
         case HttpStatusCode.NotFound:
           errorMessage = 'Nenhum crédito encontrado para o número de NFSe informado';

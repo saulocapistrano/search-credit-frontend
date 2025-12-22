@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  frontend:
+    build: .
+    ports:
+      - "4200:80"
+    networks:
+      - search-credit-network
+
+networks:
+  search-credit-network:
+    external: true

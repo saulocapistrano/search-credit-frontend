@@ -88,11 +88,30 @@
                   </thead>
                   <tbody>
                     @for (credito of creditos; track credito.id) {
-                      <tr>
+                      <tr
+                        class="cursor-pointer"
+                        [class.table-active]="isCreditoSelecionado(credito)"
+                        (click)="exibirDetalhes(credito)"
+                        role="button"
+                        tabindex="0"
+                        (keydown.enter)="exibirDetalhes(credito)"
+                        style="cursor: pointer;">
                         <td>{{ credito.numeroCredito }}</td>
                         <td>{{ credito.numeroNfse }}</td>
-                        <td>{{ credito.valor | currency:'BRL':'symbol':'1.2-2' }}</td>
-                        <td>{{ credito.dataEmissao | date:'dd/MM/yyyy' }}</td>
+                        <td>
+                          @if (credito.valor !== undefined && credito.valor !== null) {
+                            {{ credito.valor | currency:'BRL':'symbol':'1.2-2' }}
+                          } @else {
+                            -
+                          }
+                        </td>
+                        <td>
+                          @if (credito.dataEmissao) {
+                            {{ credito.dataEmissao | date:'dd/MM/yyyy' }}
+                          } @else {
+                            -
+                          }
+                        </td>
                         <td>
                           <span class="badge bg-{{ getStatusBadgeClass(credito.status) }}">
                             {{ credito.status }}
@@ -109,5 +128,144 @@
       </div>
     </div>
   </div>
+
+  @if (mostrarDetalhes && creditoSelecionado) {
+    <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+      <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Detalhes do Crédito</h5>
+            <button
+              type="button"
+              class="btn-close btn-close-white"
+              (click)="fecharDetalhes()"
+              aria-label="Fechar">
+            </button>
+          </div>
+          <div class="modal-body">
+            <div class="row g-3">
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Número do Crédito:</label>
+                  <span class="detail-value">{{ creditoSelecionado.numeroCredito }}</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Número NFSe:</label>
+                  <span class="detail-value">{{ creditoSelecionado.numeroNfse }}</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Tipo de Crédito:</label>
+                  <span class="detail-value">{{ creditoSelecionado.tipoCredito || 'Não informado' }}</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Status:</label>
+                  <span class="badge bg-{{ getStatusBadgeClass(creditoSelecionado.status) }}">
+                    {{ creditoSelecionado.status }}
+                  </span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Valor Faturado:</label>
+                  <span class="detail-value">
+                    @if (creditoSelecionado.valorFaturado !== undefined && creditoSelecionado.valorFaturado !== null) {
+                      {{ creditoSelecionado.valorFaturado | currency:'BRL':'symbol':'1.2-2' }}
+                    } @else {
+                      Não informado
+                    }
+                  </span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Valor de Dedução:</label>
+                  <span class="detail-value">
+                    @if (creditoSelecionado.valorDeducao !== undefined && creditoSelecionado.valorDeducao !== null) {
+                      {{ creditoSelecionado.valorDeducao | currency:'BRL':'symbol':'1.2-2' }}
+                    } @else {
+                      Não informado
+                    }
+                  </span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Base de Cálculo:</label>
+                  <span class="detail-value">
+                    @if (creditoSelecionado.baseCalculo !== undefined && creditoSelecionado.baseCalculo !== null) {
+                      {{ creditoSelecionado.baseCalculo | currency:'BRL':'symbol':'1.2-2' }}
+                    } @else {
+                      Não informado
+                    }
+                  </span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Alíquota:</label>
+                  <span class="detail-value">{{ formatarPercentual(creditoSelecionado.aliquota) }}</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Valor ISSQN:</label>
+                  <span class="detail-value">
+                    @if (creditoSelecionado.valorIssqn !== undefined && creditoSelecionado.valorIssqn !== null) {
+                      {{ creditoSelecionado.valorIssqn | currency:'BRL':'symbol':'1.2-2' }}
+                    } @else {
+                      Não informado
+                    }
+                  </span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Simples Nacional:</label>
+                  <span class="detail-value">{{ formatarSimplesNacional(creditoSelecionado.simplesNacional) }}</span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Data de Constituição:</label>
+                  <span class="detail-value">
+                    @if (creditoSelecionado.dataConstituicao) {
+                      {{ creditoSelecionado.dataConstituicao | date:'dd/MM/yyyy' }}
+                    } @else {
+                      Não informado
+                    }
+                  </span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Data de Emissão:</label>
+                  <span class="detail-value">
+                    {{ creditoSelecionado.dataEmissao | date:'dd/MM/yyyy' }}
+                  </span>
+                </div>
+              </div>
+              <div class="col-12 col-md-6">
+                <div class="detail-item">
+                  <label class="detail-label">Valor Total:</label>
+                  <span class="detail-value fw-bold">
+                    {{ creditoSelecionado.valor | currency:'BRL':'symbol':'1.2-2' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" (click)="fecharDetalhes()">Fechar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
 </div>
 

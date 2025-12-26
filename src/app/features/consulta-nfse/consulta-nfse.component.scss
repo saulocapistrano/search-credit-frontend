@@ -43,6 +43,28 @@
   td {
     vertical-align: middle;
   }
+  
+  tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    
+    &:hover {
+      background-color: rgba(0, 123, 255, 0.1) !important;
+    }
+  }
+}
+
+.cursor-pointer {
+  cursor: pointer;
+  
+  &:hover {
+    background-color: rgba(0, 123, 255, 0.1) !important;
+  }
+}
+
+.table-active {
+  background-color: rgba(0, 123, 255, 0.15) !important;
+  font-weight: 500;
 }
 
 .badge {
@@ -53,6 +75,40 @@
 .alert {
   border-radius: 0.5rem;
   border: none;
+}
+
+.modal {
+  z-index: 1050;
+  
+  &.show {
+    display: block;
+  }
+}
+
+.detail-item {
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #e9ecef;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.detail-label {
+  display: block;
+  font-weight: 600;
+  color: #6c757d;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-value {
+  display: block;
+  font-size: 1rem;
+  color: #212529;
+  word-break: break-word;
 }
 
 @media (max-width: 767.98px) {

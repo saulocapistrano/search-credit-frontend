@@ -20,6 +20,8 @@ export class ConsultaNfseComponent {
   isLoading = false;
   errorMessage: string | null = null;
   hasSearched = false;
+  creditoSelecionado: CreditoResponseDto | null = null;
+  mostrarDetalhes = false;
 
   constructor() {
     this.consultaForm = this.criarFormulario();
@@ -74,6 +76,37 @@ export class ConsultaNfseComponent {
     this.creditos = [];
     this.errorMessage = null;
     this.hasSearched = false;
+    this.creditoSelecionado = null;
+    this.mostrarDetalhes = false;
+  }
+
+  exibirDetalhes(credito: CreditoResponseDto): void {
+    console.log('Crédito selecionado:', credito);
+    this.creditoSelecionado = credito;
+    this.mostrarDetalhes = true;
+  }
+
+  fecharDetalhes(): void {
+    this.mostrarDetalhes = false;
+    this.creditoSelecionado = null;
+  }
+
+  isCreditoSelecionado(credito: CreditoResponseDto): boolean {
+    return this.creditoSelecionado?.id === credito.id;
+  }
+
+  formatarSimplesNacional(valor: boolean | undefined): string {
+    if (valor === undefined || valor === null) {
+      return 'Não informado';
+    }
+    return valor ? 'Sim' : 'Não';
+  }
+
+  formatarPercentual(valor: number | undefined): string {
+    if (valor === undefined || valor === null) {
+      return 'Não informado';
+    }
+    return `${valor}%`;
   }
 
   temErro(campo: string): boolean {
@@ -96,7 +129,7 @@ export class ConsultaNfseComponent {
 
   getStatusBadgeClass(status: string): string {
     const statusLower = status?.toLowerCase() || '';
-    
+
     if (statusLower.includes('ativo') || statusLower.includes('aprovado')) {
       return 'success';
     }
@@ -106,7 +139,7 @@ export class ConsultaNfseComponent {
     if (statusLower.includes('cancelado') || statusLower.includes('rejeitado')) {
       return 'danger';
     }
-    
+
     return 'secondary';
   }
 }

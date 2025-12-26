@@ -1,0 +1,113 @@
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h2 class="card-title mb-0">
+            Consulta por NFS-e
+          </h2>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="consultaForm" (ngSubmit)="buscar()" novalidate>
+            <div class="row g-3">
+              <div class="col-12 col-md-8">
+                <label for="numeroNfse" class="form-label">Número da NFSe</label>
+                <input
+                  type="text"
+                  id="numeroNfse"
+                  class="form-control"
+                  [class.is-invalid]="temErro('numeroNfse')"
+                  formControlName="numeroNfse"
+                  placeholder="Digite o número da NFSe"
+                  [disabled]="isLoading"
+                />
+                @if (temErro('numeroNfse')) {
+                  <div class="invalid-feedback d-block">
+                    {{ getMensagemErro('numeroNfse') }}
+                  </div>
+                }
+              </div>
+              <div class="col-12 col-md-4 d-flex align-items-end">
+                <div class="d-flex gap-2 w-100">
+                  <button
+                    type="submit"
+                    class="btn btn-primary flex-fill"
+                    [disabled]="isLoading || consultaForm.invalid">
+                    @if (isLoading) {
+                      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span>Buscando...</span>
+                    } @else {
+                      Buscar
+                    }
+                  </button>
+                  @if (hasSearched) {
+                      <button
+                        type="button"
+                        class="btn btn-outline-secondary"
+                        (click)="limpar()"
+                        [disabled]="isLoading"
+                        title="Limpar">
+                        ×
+                      </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </form>
+
+          @if (isLoading) {
+            <div class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+              </div>
+              <p class="mt-3 text-muted">Buscando créditos...</p>
+            </div>
+          }
+
+          @if (!isLoading && errorMessage && creditos.length === 0 && hasSearched) {
+            <div class="alert alert-warning mt-4" role="alert">
+              <strong>Atenção:</strong> {{ errorMessage }}
+            </div>
+          }
+
+          @if (!isLoading && creditos.length > 0) {
+            <div class="mt-4">
+              <h5 class="mb-3">
+                Créditos Encontrados ({{ creditos.length }})
+              </h5>
+              <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Número do Crédito</th>
+                      <th>Número NFSe</th>
+                      <th>Valor</th>
+                      <th>Data de Emissão</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (credito of creditos; track credito.id) {
+                      <tr>
+                        <td>{{ credito.numeroCredito }}</td>
+                        <td>{{ credito.numeroNfse }}</td>
+                        <td>{{ credito.valor | currency:'BRL':'symbol':'1.2-2' }}</td>
+                        <td>{{ credito.dataEmissao | date:'dd/MM/yyyy' }}</td>
+                        <td>
+                          <span class="badge bg-{{ getStatusBadgeClass(credito.status) }}">
+                            {{ credito.status }}
+                          </span>
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

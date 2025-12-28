@@ -15,7 +15,7 @@
                   <input
                   type="text"
                   id="numeroCredito"
-                  class="form-control"
+                  class="form-control form-control-mobile"
                   [class.is-invalid]="temErro('numeroCredito')"
                   formControlName="numeroCredito"
                   placeholder="Digite o número do crédito"
@@ -30,10 +30,10 @@
                 }
               </div>
               <div class="col-12 col-md-4 d-flex align-items-end">
-                <div class="d-flex gap-2 w-100">
+                <div class="d-flex gap-2 w-100 flex-column flex-md-row">
                   <button
                     type="submit"
-                    class="btn btn-primary flex-fill"
+                    class="btn btn-primary btn-mobile flex-fill"
                     [disabled]="isLoading || consultaForm.invalid">
                     @if (isLoading) {
                       <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
@@ -45,7 +45,7 @@
                   @if (credito || errorMessage) {
                     <button
                       type="button"
-                      class="btn btn-outline-secondary"
+                      class="btn btn-outline-secondary btn-mobile"
                       (click)="limpar()"
                       [disabled]="isLoading"
                       title="Limpar">
@@ -84,8 +84,8 @@
 </div>
 
 @if (mostrarDetalhes && credito) {
-  <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
-    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+  <div class="modal fade show d-block modal-mobile" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-mobile" role="document">
       <div class="modal-content">
         <div class="modal-header bg-primary text-white">
           <h5 class="modal-title">Detalhes do Crédito</h5>
@@ -96,7 +96,7 @@
             aria-label="Fechar">
           </button>
         </div>
-        <div class="modal-body">
+        <div class="modal-body modal-body-mobile">
           <div class="row g-3">
             <div class="col-12 col-md-6">
               <div class="detail-item">
@@ -226,8 +226,8 @@
             </div>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="fecharDetalhes()">Fechar</button>
+        <div class="modal-footer modal-footer-mobile">
+          <button type="button" class="btn btn-secondary btn-mobile" (click)="fecharDetalhes()">Fechar</button>
         </div>
       </div>
     </div>

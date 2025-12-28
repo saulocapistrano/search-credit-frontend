@@ -29,8 +29,19 @@ export class ConsultaNfseComponent {
 
   private criarFormulario(): FormGroup {
     return this.formBuilder.group({
-      numeroNfse: ['', [Validators.required, Validators.minLength(1)]]
+      numeroNfse: [{ value: '', disabled: false }, [Validators.required, Validators.minLength(1)]]
     });
+  }
+
+  private atualizarEstadoFormulario(): void {
+    const control = this.consultaForm.get('numeroNfse');
+    if (control) {
+      if (this.isLoading) {
+        control.disable();
+      } else {
+        control.enable();
+      }
+    }
   }
 
   buscar(): void {
@@ -54,11 +65,13 @@ export class ConsultaNfseComponent {
     this.errorMessage = null;
     this.creditos = [];
     this.hasSearched = true;
+    this.atualizarEstadoFormulario();
 
     this.creditoService.buscarPorNumeroNfse(numeroNfse).subscribe({
       next: (resultado) => {
         this.isLoading = false;
         this.creditos = resultado;
+        this.atualizarEstadoFormulario();
         if (resultado.length === 0) {
           this.errorMessage = 'Nenhum crédito encontrado para o número de NFSe informado';
         }
@@ -67,6 +80,7 @@ export class ConsultaNfseComponent {
         this.isLoading = false;
         this.errorMessage = error.message || 'Erro ao buscar créditos';
         this.creditos = [];
+        this.atualizarEstadoFormulario();
       }
     });
   }
@@ -78,6 +92,8 @@ export class ConsultaNfseComponent {
     this.hasSearched = false;
     this.creditoSelecionado = null;
     this.mostrarDetalhes = false;
+    this.isLoading = false;
+    this.atualizarEstadoFormulario();
   }
 
   exibirDetalhes(credito: CreditoResponseDto): void {

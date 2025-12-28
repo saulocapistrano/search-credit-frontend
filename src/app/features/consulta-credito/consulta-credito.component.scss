@@ -72,6 +72,15 @@
 }
 
 @media (max-width: 767.98px) {
+  .container-fluid {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .card {
+    margin: 0 0.5rem;
+  }
+
   .card-header {
     padding: 1rem;
   }
@@ -80,8 +89,64 @@
     font-size: 1.25rem;
   }
 
-  .btn {
-    font-size: 0.875rem;
+  .form-control-mobile {
+    font-size: 16px;
+    padding: 0.75rem;
+    min-height: 44px;
+  }
+
+  .btn-mobile {
+    width: 100%;
+    min-height: 44px;
+    font-size: 1rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .modal-mobile {
+    padding: 0.5rem;
+  }
+
+  .modal-dialog-mobile {
+    max-width: 95%;
+    margin: 1rem auto;
+  }
+
+  .modal-body-mobile {
+    padding: 1rem;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+  }
+
+  .modal-footer-mobile {
+    padding: 1rem;
+    border-top: 1px solid #dee2e6;
+
+    .btn {
+      width: 100%;
+    }
+  }
+
+  .detail-item {
+    padding: 1rem 0;
+  }
+
+  .detail-label {
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .detail-value {
+    font-size: 0.95rem;
+  }
+
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.5rem 0.75rem;
   }
 }
 

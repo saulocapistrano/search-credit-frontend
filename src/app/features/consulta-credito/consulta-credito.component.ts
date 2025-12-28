@@ -1,21 +1,165 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { CreditoService } from '../../core/services/credito.service';
+import { CreditoDetalhadoDto } from '../../core/models/credito-detalhado.dto';
 
 @Component({
   selector: 'app-consulta-credito',
   standalone: true,
-  imports: [],
-  template: `
-    <div class="container mt-4">
-      <h2>Consulta por Número do Crédito</h2>
-      <p>Funcionalidade em desenvolvimento...</p>
-    </div>
-  `,
-  styles: [`
-    .container {
-      padding: 2rem;
-    }
-  `]
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './consulta-credito.component.html',
+  styleUrl: './consulta-credito.component.scss'
 })
 export class ConsultaCreditoComponent {
-}
+  private readonly creditoService = inject(CreditoService);
+  private readonly formBuilder = inject(FormBuilder);
 
+  consultaForm: FormGroup;
+  credito: CreditoDetalhadoDto | null = null;
+  isLoading = false;
+  errorMessage: string | null = null;
+  mostrarDetalhes = false;
+
+  constructor() {
+    this.consultaForm = this.criarFormulario();
+  }
+
+  private criarFormulario(): FormGroup {
+    return this.formBuilder.group({
+      numeroCredito: ['', [Validators.required, Validators.minLength(1)]]
+    });
+  }
+
+  buscar(): void {
+    const numeroCredito = this.consultaForm.get('numeroCredito')?.value?.trim();
+
+    if (!numeroCredito || numeroCredito === '') {
+      this.errorMessage = 'Informe um número de crédito válido.';
+      this.marcarCamposComoTocados();
+      return;
+    }
+
+    if (this.consultaForm.invalid) {
+      this.marcarCamposComoTocados();
+      return;
+    }
+
+    this.realizarBusca(numeroCredito);
+  }
+
+  private marcarCamposComoTocados(): void {
+    Object.keys(this.consultaForm.controls).forEach(key => {
+      this.consultaForm.get(key)?.markAsTouched();
+    });
+  }
+
+  private realizarBusca(numeroCredito: string): void {
+    this.isLoading = true;
+    this.errorMessage = null;
+    this.credito = null;
+    this.mostrarDetalhes = false;
+
+    this.creditoService.buscarPorNumeroCredito(numeroCredito).subscribe({
+      next: (resultado) => {
+        this.isLoading = false;
+        this.credito = resultado;
+        this.mostrarDetalhes = true;
+      },
+      error: (error: HttpErrorResponse | Error) => {
+        this.isLoading = false;
+
+        if (error instanceof HttpErrorResponse) {
+          if (error.status === 404) {
+            this.errorMessage = 'Crédito não encontrado para o número informado.';
+          } else if (error.status === 500) {
+            this.errorMessage = 'Erro interno do servidor. Tente novamente mais tarde.';
+          } else if (error.status) {
+            this.errorMessage = `Ocorreu um erro inesperado. Código: ${error.status}`;
+          } else {
+            this.errorMessage = error.error?.message || 'Erro ao buscar crédito';
+          }
+        } else {
+          if (error.message) {
+            this.errorMessage = error.message;
+          } else {
+            this.errorMessage = 'Erro ao buscar crédito';
+          }
+        }
+
+        this.credito = null;
+        this.mostrarDetalhes = false;
+      }
+    });
+  }
+
+  limpar(): void {
+    this.consultaForm.reset();
+    this.credito = null;
+    this.errorMessage = null;
+    this.mostrarDetalhes = false;
+  }
+
+  fecharDetalhes(): void {
+    this.mostrarDetalhes = false;
+  }
+
+  temErro(campo: string): boolean {
+    const control = this.consultaForm.get(campo);
+    return !!(control && control.invalid && control.touched);
+  }
+
+  getMensagemErro(campo: string): string | null {
+    const control = this.consultaForm.get(campo);
+    if (control && control.errors && control.touched) {
+      if (control.errors['required']) {
+        return 'Número do crédito é obrigatório';
+      }
+      if (control.errors['minlength']) {
+        return 'Número do crédito deve ter pelo menos 1 caractere';
+      }
+    }
+    return null;
+  }
+
+  getStatusBadgeClass(status: string | undefined): string {
+    if (!status) {
+      return 'secondary';
+    }
+
+    const statusLower = status.toLowerCase();
+
+    if (statusLower.includes('ativo') || statusLower.includes('aprovado')) {
+      return 'success';
+    }
+    if (statusLower.includes('pendente') || statusLower.includes('processando')) {
+      return 'warning';
+    }
+    if (statusLower.includes('cancelado') || statusLower.includes('rejeitado')) {
+      return 'danger';
+    }
+
+    return 'secondary';
+  }
+
+  formatarSimplesNacional(valor: string | boolean | undefined): string {
+    if (valor === undefined || valor === null) {
+      return 'Não informado';
+    }
+    if (typeof valor === 'boolean') {
+      return valor ? 'Sim' : 'Não';
+    }
+    if (typeof valor === 'string') {
+      return valor.toLowerCase() === 'true' || valor.toLowerCase() === 'sim' ? 'Sim' : 'Não';
+    }
+    return 'Não informado';
+  }
+
+  formatarPercentual(valor: number | undefined): string {
+    if (valor === undefined || valor === null) {
+      return 'Não informado';
+    }
+    return `${valor}%`;
+  }
+}

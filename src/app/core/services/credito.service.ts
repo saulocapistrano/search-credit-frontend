@@ -4,6 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { HttpStatusCode } from '@angular/common/http';
 import { CreditoResponseDto } from '../models/credito-response.dto';
+import { CreditoDetalhadoDto } from '../models/credito-detalhado.dto';
 
 @Injectable({
   providedIn: 'root'
@@ -12,13 +13,25 @@ export class CreditoService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api';
 
+  buscarPorNumeroCredito(numeroCredito: string): Observable<CreditoDetalhadoDto> {
+    if (!numeroCredito || numeroCredito.trim() === '') {
+      return throwError(() => new Error('Número do crédito é obrigatório'));
+    }
+
+    const url = `${this.apiUrl}/creditos/credito/${encodeURIComponent(numeroCredito.trim())}`;
+
+    return this.http.get<CreditoDetalhadoDto>(url).pipe(
+      catchError(this.handleErrorCredito)
+    );
+  }
+
   buscarPorNumeroNfse(numeroNfse: string): Observable<CreditoResponseDto[]> {
     if (!numeroNfse || numeroNfse.trim() === '') {
       return throwError(() => new Error('Número da NFSe é obrigatório'));
     }
 
     const url = `${this.apiUrl}/creditos/${encodeURIComponent(numeroNfse.trim())}`;
-    
+
     return this.http.get<CreditoResponseDto[]>(url).pipe(
       map(response => Array.isArray(response) ? response : []),
       catchError(this.handleError)
@@ -50,6 +63,10 @@ export class CreditoService {
     }
 
     return throwError(() => new Error(errorMessage));
+  }
+
+  private handleErrorCredito(error: HttpErrorResponse): Observable<never> {
+    return throwError(() => error);
   }
 }
 

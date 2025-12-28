@@ -20,7 +20,7 @@
 
 .btn {
   transition: all 0.2s ease;
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -32,46 +32,6 @@
   height: 3rem;
 }
 
-.table {
-  margin-bottom: 0;
-  
-  th {
-    font-weight: 600;
-    white-space: nowrap;
-  }
-  
-  td {
-    vertical-align: middle;
-  }
-  
-  tbody tr {
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-    
-    &:hover {
-      background-color: rgba(0, 123, 255, 0.1) !important;
-    }
-  }
-}
-
-.cursor-pointer {
-  cursor: pointer;
-  
-  &:hover {
-    background-color: rgba(0, 123, 255, 0.1) !important;
-  }
-}
-
-.table-active {
-  background-color: rgba(0, 123, 255, 0.15) !important;
-  font-weight: 500;
-}
-
-.badge {
-  font-size: 0.875rem;
-  padding: 0.375rem 0.75rem;
-}
-
 .alert {
   border-radius: 0.5rem;
   border: none;
@@ -79,7 +39,7 @@
 
 .modal {
   z-index: 1050;
-  
+
   &.show {
     display: block;
   }
@@ -88,7 +48,7 @@
 .detail-item {
   padding: 0.75rem 0;
   border-bottom: 1px solid #e9ecef;
-  
+
   &:last-child {
     border-bottom: none;
   }
@@ -115,15 +75,11 @@
   .card-header {
     padding: 1rem;
   }
-  
+
   .card-title {
     font-size: 1.25rem;
   }
-  
-  .table-responsive {
-    font-size: 0.875rem;
-  }
-  
+
   .btn {
     font-size: 0.875rem;
   }

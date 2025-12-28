@@ -1,0 +1,236 @@
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-10 col-xl-8">
+      <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+          <h2 class="card-title mb-0">
+            Consulta por Número do Crédito
+          </h2>
+        </div>
+        <div class="card-body">
+          <form [formGroup]="consultaForm" (ngSubmit)="buscar()" novalidate>
+            <div class="row g-3">
+              <div class="col-12 col-md-8">
+                <label for="numeroCredito" class="form-label">Número do Crédito</label>
+                  <input
+                  type="text"
+                  id="numeroCredito"
+                  class="form-control"
+                  [class.is-invalid]="temErro('numeroCredito')"
+                  formControlName="numeroCredito"
+                  placeholder="Digite o número do crédito"
+                  [disabled]="isLoading"
+                  (keydown.enter)="buscar()"
+                  (keyup.enter)="buscar()"
+                />
+                @if (temErro('numeroCredito')) {
+                  <div class="invalid-feedback d-block">
+                    {{ getMensagemErro('numeroCredito') }}
+                  </div>
+                }
+              </div>
+              <div class="col-12 col-md-4 d-flex align-items-end">
+                <div class="d-flex gap-2 w-100">
+                  <button
+                    type="submit"
+                    class="btn btn-primary flex-fill"
+                    [disabled]="isLoading || consultaForm.invalid">
+                    @if (isLoading) {
+                      <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      <span>Buscando...</span>
+                    } @else {
+                      Buscar
+                    }
+                  </button>
+                  @if (credito || errorMessage) {
+                    <button
+                      type="button"
+                      class="btn btn-outline-secondary"
+                      (click)="limpar()"
+                      [disabled]="isLoading"
+                      title="Limpar">
+                      ×
+                    </button>
+                  }
+                </div>
+              </div>
+            </div>
+          </form>
+
+          @if (isLoading) {
+            <div class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Carregando...</span>
+              </div>
+              <p class="mt-3 text-muted">Buscando crédito...</p>
+            </div>
+          }
+
+          @if (!isLoading && errorMessage && !mostrarDetalhes) {
+            <div class="alert alert-warning mt-4" role="alert">
+              <strong>Atenção:</strong> {{ errorMessage }}
+            </div>
+          }
+
+          @if (!isLoading && !credito && !errorMessage && !mostrarDetalhes) {
+            <div class="text-muted mt-4 text-center py-3">
+              Digite o número de um crédito acima para consultar os detalhes.
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+@if (mostrarDetalhes && credito) {
+  <div class="modal fade show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Detalhes do Crédito</h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            (click)="fecharDetalhes()"
+            aria-label="Fechar">
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Número do Crédito:</label>
+                <span class="detail-value">{{ credito.numeroCredito }}</span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Número NFSe:</label>
+                <span class="detail-value">{{ credito.numeroNfse }}</span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Tipo de Crédito:</label>
+                <span class="detail-value">{{ credito.tipoCredito || 'Não informado' }}</span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Status:</label>
+                @if (credito.status) {
+                  <span class="badge bg-{{ getStatusBadgeClass(credito.status) }}">
+                    {{ credito.status }}
+                  </span>
+                } @else {
+                  <span class="detail-value">Não informado</span>
+                }
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Valor Faturado:</label>
+                <span class="detail-value">
+                  @if (credito.valorFaturado !== undefined && credito.valorFaturado !== null) {
+                    {{ credito.valorFaturado | currency:'BRL':'symbol':'1.2-2' }}
+                  } @else {
+                    Não informado
+                  }
+                </span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Valor de Dedução:</label>
+                <span class="detail-value">
+                  @if (credito.valorDeducao !== undefined && credito.valorDeducao !== null) {
+                    {{ credito.valorDeducao | currency:'BRL':'symbol':'1.2-2' }}
+                  } @else {
+                    Não informado
+                  }
+                </span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Base de Cálculo:</label>
+                <span class="detail-value">
+                  @if (credito.baseCalculo !== undefined && credito.baseCalculo !== null) {
+                    {{ credito.baseCalculo | currency:'BRL':'symbol':'1.2-2' }}
+                  } @else {
+                    Não informado
+                  }
+                </span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Alíquota:</label>
+                <span class="detail-value">{{ formatarPercentual(credito.aliquota) }}</span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Valor ISSQN:</label>
+                <span class="detail-value">
+                  @if (credito.valorIssqn !== undefined && credito.valorIssqn !== null) {
+                    {{ credito.valorIssqn | currency:'BRL':'symbol':'1.2-2' }}
+                  } @else {
+                    Não informado
+                  }
+                </span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Simples Nacional:</label>
+                <span class="detail-value">{{ formatarSimplesNacional(credito.simplesNacional) }}</span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Data de Constituição:</label>
+                <span class="detail-value">
+                  @if (credito.dataConstituicao) {
+                    {{ credito.dataConstituicao | date:'dd/MM/yyyy' }}
+                  } @else {
+                    Não informado
+                  }
+                </span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Data de Emissão:</label>
+                <span class="detail-value">
+                  @if (credito.dataEmissao) {
+                    {{ credito.dataEmissao | date:'dd/MM/yyyy' }}
+                  } @else {
+                    Não informado
+                  }
+                </span>
+              </div>
+            </div>
+            <div class="col-12 col-md-6">
+              <div class="detail-item">
+                <label class="detail-label">Valor Total:</label>
+                <span class="detail-value fw-bold">
+                  @if (credito.valor !== undefined && credito.valor !== null) {
+                    {{ credito.valor | currency:'BRL':'symbol':'1.2-2' }}
+                  } @else {
+                    Não informado
+                  }
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="fecharDetalhes()">Fechar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}
+

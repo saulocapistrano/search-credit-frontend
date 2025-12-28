@@ -1,18 +1,17 @@
-export interface CreditoResponseDto {
-  id: number;
-  numeroNfse: string;
+export interface CreditoDetalhadoDto {
   numeroCredito: string;
-  valor: number;
-  dataEmissao: string;
-  status: string;
+  numeroNfse: string;
   dataConstituicao?: string;
   valorIssqn?: number;
   tipoCredito?: string;
-  simplesNacional?: boolean;
+  simplesNacional?: string;
   aliquota?: number;
   valorFaturado?: number;
   valorDeducao?: number;
   baseCalculo?: number;
+  valor?: number;
+  dataEmissao?: string;
+  status?: string;
   [key: string]: unknown;
 }
 

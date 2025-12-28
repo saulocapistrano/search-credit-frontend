@@ -2,75 +2,134 @@
 
 Aplicação web desenvolvida em Angular para consulta e visualização de créditos fiscais através de número de NFS-e ou número do crédito.
 
-## Visão Geral
+## Links dos Repositórios
 
-O Search Credit Frontend é uma Single Page Application (SPA) que fornece uma interface moderna e responsiva para consulta de créditos fiscais. A aplicação permite aos usuários buscar créditos utilizando dois métodos distintos: por número de NFS-e ou por número do crédito, exibindo informações detalhadas de forma clara e organizada.
+- **Backend:** https://github.com/saulocapistrano/search-credit
+- **Frontend (Este projeto):** https://github.com/saulocapistrano/search-credit-frontend
+- **Worker:** https://github.com/saulocapistrano/credito-analise-worker
 
-## Tecnologias Utilizadas
+## Pré-requisitos Obrigatórios
 
-### Framework e Core
-- **Angular 19.2.0** - Framework principal
-- **TypeScript 5.7.2** - Linguagem de programação
-- **RxJS 7.8.0** - Programação reativa
-- **Zone.js 0.15.0** - Detecção de mudanças
+- **Docker Desktop** instalado e **rodando**
+- **Node.js 18+** (para desenvolvimento local, se necessário)
+- **npm** ou **yarn** (para desenvolvimento local)
 
-### UI e Estilização
-- **Bootstrap 5.3.8** - Framework CSS responsivo
-- **SCSS** - Pré-processador CSS
-- **Font Awesome 7.1.0** - Biblioteca de ícones (disponível, não utilizado ativamente)
-
-### Roteamento e Formulários
-- **Angular Router 19.2.0** - Roteamento de páginas
-- **Angular Reactive Forms** - Formulários reativos com validação
-
-### HTTP e Comunicação
-- **Angular HttpClient** - Cliente HTTP para comunicação com API REST
-- **Express 4.18.2** - Servidor Node.js (para SSR, configurado mas não utilizado)
-
-### Testes
-- **Jasmine 5.6.0** - Framework de testes
-- **Karma 6.4.0** - Test runner
-- **HttpClientTestingModule** - Mock de requisições HTTP em testes
-
-### Build e Deploy
-- **Angular CLI 19.2.15** - Ferramentas de build e desenvolvimento
-- **Docker** - Containerização
-- **Nginx** - Servidor web para produção
-
-## Arquitetura do Projeto
-
-A aplicação segue uma arquitetura modular baseada em features, com separação clara de responsabilidades:
-
+**Verificar Docker:**
+```bash
+docker ps
 ```
-src/app/
-├── core/                          # Módulos e serviços compartilhados
-│   ├── models/                    # Interfaces e DTOs
-│   │   ├── credito-response.dto.ts
-│   │   └── credito-detalhado.dto.ts
-│   └── services/                  # Serviços HTTP
-│       └── credito.service.ts
-├── features/                      # Módulos de funcionalidades
-│   ├── consulta-nfse/             # Consulta por NFS-e
-│   │   ├── consulta-nfse.component.ts
-│   │   ├── consulta-nfse.component.html
-│   │   ├── consulta-nfse.component.scss
-│   │   └── consulta-nfse.component.spec.ts
-│   └── consulta-credito/          # Consulta por número do crédito
-│       ├── consulta-credito.component.ts
-│       ├── consulta-credito.component.html
-│       └── consulta-credito.component.scss
-├── app.component.ts               # Componente raiz
-├── app.routes.ts                  # Configuração de rotas
-└── app.config.ts                  # Configuração da aplicação
+
+Se o comando acima falhar, inicie o Docker Desktop e aguarde até que esteja totalmente inicializado.
+
+## Comandos para Executar o Frontend
+
+```bash
+# 1. Clone o repositório
+git clone https://github.com/saulocapistrano/search-credit-frontend.git
+cd search-credit-frontend
+
+# 2. Criar rede Docker (se não existir)
+docker network create search-credit-network
+
+# 3. Subir o frontend
+docker compose up -d --build
+
+# 4. Verificar logs do frontend
+docker compose logs -f frontend
 ```
+
+**Aguarde até ver:** Container rodando e Nginx respondendo.
+
+**Acessar:** http://localhost:4200
+
+## Execução do Ecossistema Completo
+
+Para testar o sistema completo (Backend + Frontend), execute os projetos abaixo na ordem indicada.
+
+### Backend Spring Boot
+
+```bash
+git clone https://github.com/saulocapistrano/search-credit.git
+cd search-credit
+./mvnw clean package
+docker compose up -d postgres zookeeper kafka kafka-ui
+docker compose up -d search-credit
+```
+
+**Repositório:** https://github.com/saulocapistrano/search-credit
+
+**Responsabilidades:**
+- API REST para consulta de créditos
+- Gerencia PostgreSQL e Kafka
+- Porta: `8189`
+
+**Acessar:** http://localhost:8189/swagger-ui.html
+
+### Frontend Angular (Este Projeto)
+
+```bash
+git clone https://github.com/saulocapistrano/search-credit-frontend.git
+cd search-credit-frontend
+docker compose up -d --build
+```
+
+**Repositório:** https://github.com/saulocapistrano/search-credit-frontend
+
+**Responsabilidades:**
+- Interface web para consulta de créditos
+- Consulta por NFS-e ou número do crédito
+- Tabela responsiva de resultados
+- Porta: `4200`
+
+**Acessar:** http://localhost:4200
+
+### Serviço de Análise (Opcional)
+
+O worker Kafka é um serviço adicional.
+
+### Worker Kafka (Opcional)
+
+```bash
+git clone https://github.com/saulocapistrano/credito-analise-worker.git
+cd credito-analise-worker
+./mvnw clean package
+docker compose up -d worker
+```
+
+**Repositório:** https://github.com/saulocapistrano/credito-analise-worker
+
+**Responsabilidades:**
+- Consome eventos Kafka do tópico `consulta-creditos-topic`
+- Processa eventos de consulta de forma assíncrona
+- Porta: `8081`
+
+## Execução do Frontend Isoladamente
+
+O frontend pode ser executado isoladamente para desenvolvimento local. A comunicação com a API requer que o backend esteja rodando e acessível.
+
+### Desenvolvimento Local
+
+```bash
+# 1. Instalar dependências
+npm install
+
+# 2. Iniciar servidor de desenvolvimento
+npm start
+# ou
+ng serve
+```
+
+**Acessar:** http://localhost:4200
+
+**Nota:** Para desenvolvimento local, pode ser necessário configurar um proxy para `/api/` ou ajustar a URL base no serviço `CreditoService`.
 
 ## Funcionalidades Implementadas
 
-### 1. Consulta por Número de NFS-e
+### Consulta por Número de NFS-e
 
 Permite buscar todos os créditos associados a um número de NFS-e específico.
 
-**Endpoint:** `GET /api/creditos/{numeroNfse}`
+**Endpoint utilizado:** `GET /api/creditos/{numeroNfse}`
 
 **Características:**
 - Formulário reativo com validação
@@ -87,11 +146,11 @@ Permite buscar todos os créditos associados a um número de NFS-e específico.
 - Data de Emissão
 - Status (com badge colorido)
 
-### 2. Consulta por Número do Crédito
+### Consulta por Número do Crédito
 
 Permite buscar um crédito específico pelo seu número único.
 
-**Endpoint:** `GET /api/creditos/credito/{numeroCredito}`
+**Endpoint utilizado:** `GET /api/creditos/credito/{numeroCredito}`
 
 **Características:**
 - Formulário reativo com validação
@@ -101,9 +160,14 @@ Permite buscar um crédito específico pelo seu número único.
 - Mensagem inicial orientando o usuário
 - Suporte a teclado (Enter para buscar)
 
-### 3. Modal de Detalhes do Crédito
+**Status HTTP tratados:**
+- `200 OK` - Crédito encontrado
+- `404 Not Found` - Crédito não encontrado
+- `500 Internal Server Error` - Erro interno do servidor
 
-Exibe informações completas do crédito selecionado.
+### Modal de Detalhes do Crédito
+
+Exibe informações completas do crédito selecionado em modal responsivo.
 
 **Campos exibidos:**
 - Número do Crédito
@@ -126,16 +190,185 @@ Exibe informações completas do crédito selecionado.
 - Tratamento de valores opcionais
 - Botão de fechar sempre visível
 
-### 4. Navegação
+## Testes Automatizados
 
-Menu de navegação fixo no topo da página com links para:
-- Consulta por NFS-e
-- Consulta por Número do Crédito
+### Executar Testes
 
-**Características:**
-- Menu responsivo com collapse em mobile
-- Indicação visual da rota ativa
-- Navegação suave entre páginas
+```bash
+npm test
+# ou
+ng test
+```
+
+**Cobertura:**
+- Testes unitários do `ConsultaNfseComponent`
+- Testes do `AppComponent`
+- Jasmine e Karma
+- Mock de requisições HTTP via `HttpClientTestingModule`
+- Testes isolados sem dependências externas
+
+### Executar Testes com Cobertura
+
+```bash
+ng test --code-coverage
+```
+
+## Tecnologias e Recursos
+
+### Stack Tecnológico
+
+- **Angular 19.2.0** - Framework principal
+- **TypeScript 5.7.2** - Linguagem de programação
+- **RxJS 7.8.0** - Programação reativa
+- **Bootstrap 5.3.8** - Framework CSS responsivo
+- **SCSS** - Pré-processador CSS
+- **Angular Reactive Forms** - Formulários reativos
+- **Angular Router** - Roteamento de páginas
+- **Docker & Docker Compose** - Containerização
+- **Nginx** - Servidor web para produção
+- **Jasmine & Karma** - Testes unitários
+
+### Arquitetura
+
+O projeto segue uma arquitetura modular baseada em features, com separação clara de responsabilidades:
+
+- **Core**: Serviços HTTP compartilhados e modelos/DTOs
+- **Features**: Componentes de funcionalidades específicas (consulta-nfse, consulta-credito)
+- **Standalone Components**: Componentes independentes sem módulos tradicionais
+- **Lazy Loading**: Carregamento sob demanda das rotas
+
+### Comunicação com Backend
+
+O frontend comunica-se com a API através de proxy reverso configurado no Nginx:
+
+- **Proxy Reverso**: `/api/` → `http://search-credit:8189`
+- **Resolução DNS**: Utiliza nome do serviço Docker `search-credit`
+- **Rede Compartilhada**: Todos os serviços na rede `search-credit-network`
+
+### Padrões de Projeto
+
+- **Service Pattern** - Separação de lógica HTTP em serviços
+- **DTO Pattern** - Interfaces TypeScript para transferência de dados
+- **Reactive Forms** - Formulários reativos com validação
+- **Dependency Injection** - Injeção via Angular
+- **Lazy Loading** - Carregamento sob demanda de componentes
+
+## Comandos Úteis
+
+### Verificar Status do Serviço
+
+```bash
+docker compose ps
+```
+
+### Ver Logs
+
+```bash
+docker compose logs -f frontend
+```
+
+### Parar o Serviço
+
+```bash
+docker compose down
+```
+
+### Reiniciar o Serviço
+
+```bash
+docker compose restart
+```
+
+### Build Local
+
+```bash
+npm run build
+```
+
+Os arquivos compilados estarão em `dist/search-credit-frontend/browser/`
+
+## Troubleshooting
+
+### Docker Desktop não está rodando
+
+**Sintoma:** `Cannot connect to the Docker daemon`
+
+**Solução:** Inicie o Docker Desktop e aguarde até que esteja totalmente inicializado.
+
+### Porta já está em uso
+
+**Sintoma:** `Bind for 0.0.0.0:4200 failed: port is already allocated`
+
+**Solução:** Identifique e pare o processo usando a porta ou altere a porta no `docker-compose.yml`.
+
+### Frontend não consegue acessar o backend
+
+**Sintoma:** Erro 502 Bad Gateway ou "host not found in upstream"
+
+**Soluções:**
+1. Verificar se o backend está rodando: `docker ps | grep search-credit`
+2. Verificar se estão na mesma rede Docker: `docker network inspect search-credit-network`
+3. Verificar configuração do Nginx em `nginx.conf`
+4. Reiniciar o frontend: `docker compose restart`
+
+### Rede Docker não existe
+
+**Sintoma:** `network search-credit-network not found`
+
+**Solução:**
+```bash
+docker network create search-credit-network
+```
+
+### Build falha com erro de SSR
+
+**Sintoma:** Erro durante build relacionado a prerendering
+
+**Solução:** O projeto está configurado para build apenas client-side. Verifique se o `angular.json` não contém configurações de `server` ou `ssr`.
+
+### Testes falham
+
+**Sintomas:** Erros relacionados a `ActivatedRoute` ou `HttpClient`
+
+**Soluções:**
+1. Verificar se `ActivatedRoute` está mockado nos testes do `AppComponent`
+2. Verificar se `HttpClientTestingModule` está importado nos testes
+3. Executar `npm install` para garantir dependências atualizadas
+
+## Estrutura do Projeto
+
+```
+search-credit-frontend/
+├── src/
+│   ├── app/
+│   │   ├── core/                  # Serviços e modelos compartilhados
+│   │   │   ├── models/            # DTOs e interfaces
+│   │   │   │   ├── credito-response.dto.ts
+│   │   │   │   └── credito-detalhado.dto.ts
+│   │   │   └── services/          # Serviços HTTP
+│   │   │       └── credito.service.ts
+│   │   ├── features/              # Módulos de funcionalidades
+│   │   │   ├── consulta-nfse/     # Consulta por NFS-e
+│   │   │   │   ├── consulta-nfse.component.ts
+│   │   │   │   ├── consulta-nfse.component.html
+│   │   │   │   ├── consulta-nfse.component.scss
+│   │   │   │   └── consulta-nfse.component.spec.ts
+│   │   │   └── consulta-credito/  # Consulta por número do crédito
+│   │   │       ├── consulta-credito.component.ts
+│   │   │       ├── consulta-credito.component.html
+│   │   │       └── consulta-credito.component.scss
+│   │   ├── app.component.ts       # Componente raiz
+│   │   ├── app.routes.ts          # Configuração de rotas
+│   │   └── app.config.ts          # Configuração da aplicação
+│   ├── index.html
+│   └── styles.scss                # Estilos globais
+├── docker-compose.yml
+├── Dockerfile
+├── nginx.conf                      # Configuração do Nginx
+├── angular.json
+├── package.json
+└── README.md
+```
 
 ## Responsividade
 
@@ -150,214 +383,24 @@ A aplicação foi desenvolvida com foco em responsividade, garantindo experiênc
   - Inputs com área de toque adequada (mínimo 44px)
   - Menu hambúrguer funcional
 
-## Pré-requisitos
+## Rotas da Aplicação
 
-- **Node.js 18+** (para desenvolvimento local)
-- **npm** ou **yarn**
-- **Docker** e **Docker Compose** (para ambiente containerizado)
-- **Angular CLI 19.2.15** (instalado globalmente ou via npx)
+A aplicação utiliza lazy loading para otimizar o carregamento inicial:
 
-## Instalação e Configuração
+- `/consulta-nfse` - Consulta por NFS-e (lazy loaded)
+- `/consulta-credito` - Consulta por número do crédito (lazy loaded)
+- `/` - Redireciona para `/consulta-nfse`
 
-### Desenvolvimento Local
-
-1. Clone o repositório:
-```bash
-git clone <repository-url>
-cd search-credit-frontend
-```
-
-2. Instale as dependências:
-```bash
-npm install
-```
-
-3. Inicie o servidor de desenvolvimento:
-```bash
-npm start
-# ou
-ng serve
-```
-
-4. Acesse a aplicação em `http://localhost:4200`
-
-### Build para Produção
-
-```bash
-npm run build
-```
-
-Os arquivos compilados estarão em `dist/search-credit-frontend/browser/`
-
-## Ambiente Docker
-
-A aplicação está configurada para execução em ambiente Docker. Para instruções detalhadas sobre inicialização do ambiente completo, consulte o [Guia de Inicialização Docker](GUIA_INICIALIZACAO.md).
-
-### Resumo Rápido
-
-1. Criar a rede Docker compartilhada:
-```bash
-docker network create search-credit-network
-```
-
-2. Iniciar o backend (search-credit) primeiro
-
-3. Iniciar o worker (credito-analise-worker) em seguida
-
-4. Iniciar o frontend:
-```bash
-docker-compose up -d --build
-```
-
-O frontend estará disponível em `http://localhost:4200`
-
-### Configuração do Nginx
+## Configuração do Nginx
 
 O frontend utiliza Nginx como servidor web em produção, configurado para:
 - Servir arquivos estáticos da aplicação Angular
 - Proxy reverso para `/api/` direcionando para o backend em `http://search-credit:8189`
 - Suporte a rotas SPA (Single Page Application)
+- Resolução dinâmica de DNS para o backend
 
-## Testes
+**Arquivo:** `nginx.conf`
 
-### Executar Testes Unitários
+## Guia de Inicialização Completo
 
-```bash
-npm test
-# ou
-ng test
-```
-
-### Executar Testes com Cobertura
-
-```bash
-ng test --code-coverage
-```
-
-### Estrutura de Testes
-
-Os testes estão organizados seguindo as melhores práticas:
-- Uso de `HttpClientTestingModule` para mockar requisições HTTP
-- Testes isolados por funcionalidade
-- Cobertura de cenários de sucesso e erro
-- Validação de estados e comportamentos do componente
-
-**Arquivos de teste:**
-- `src/app/app.component.spec.ts`
-- `src/app/features/consulta-nfse/consulta-nfse.component.spec.ts`
-
-## Estrutura de Rotas
-
-A aplicação utiliza lazy loading para otimizar o carregamento inicial:
-
-```typescript
-/consulta-nfse          → ConsultaNfseComponent (lazy loaded)
-/consulta-credito       → ConsultaCreditoComponent (lazy loaded)
-/                       → Redireciona para /consulta-nfse
-```
-
-## Padrões e Boas Práticas
-
-### Separação de Responsabilidades
-- Serviços HTTP isolados em `core/services/`
-- DTOs e interfaces em `core/models/`
-- Componentes de feature em módulos separados
-- Lógica de negócio nos componentes, comunicação HTTP nos serviços
-
-### Formulários Reativos
-- Validação no TypeScript usando `Validators`
-- Controle de estado `disabled` via FormControl (não via template)
-- Mensagens de erro contextuais
-- Feedback visual de validação
-
-### Tratamento de Erros
-- Tratamento centralizado no serviço
-- Mensagens específicas por código HTTP (404, 500, etc.)
-- Exibição de erros de forma amigável ao usuário
-
-### Acessibilidade
-- Suporte a navegação por teclado
-- Atributos ARIA quando necessário
-- Estrutura semântica HTML
-
-## Configuração da API
-
-A URL base da API está configurada no serviço `CreditoService`:
-
-```typescript
-private readonly apiUrl = '/api';
-```
-
-Em ambiente Docker, o Nginx faz proxy reverso de `/api/` para o backend. Para desenvolvimento local, pode ser necessário configurar um proxy ou ajustar a URL base.
-
-## Scripts Disponíveis
-
-- `npm start` - Inicia servidor de desenvolvimento
-- `npm run build` - Build de produção
-- `npm run watch` - Build em modo watch (desenvolvimento)
-- `npm test` - Executa testes unitários
-- `ng serve` - Alias para `npm start`
-- `ng build` - Alias para `npm run build`
-
-## Dependências do Ecossistema
-
-Este frontend faz parte de um ecossistema maior que inclui:
-
-1. **search-credit** - API Backend (porta 8189)
-   - Fornece endpoints REST para consulta de créditos
-   - Gerencia PostgreSQL e Kafka
-
-2. **credito-analise-worker** - Worker de processamento
-   - Processa mensagens do Kafka
-   - Realiza análises assíncronas
-
-3. **search-credit-frontend** - Este projeto
-   - Interface web para consulta de créditos
-   - Comunica-se com a API via proxy reverso
-
-Para mais detalhes sobre a ordem de inicialização e dependências, consulte o [Guia de Inicialização Docker](GUIA_INICIALIZACAO.md).
-
-## Troubleshooting
-
-### Problema: Frontend não consegue acessar o backend
-
-**Sintomas:** Erro 502 Bad Gateway ou "host not found in upstream"
-
-**Soluções:**
-1. Verificar se o backend está rodando: `docker ps | grep search-credit`
-2. Verificar se estão na mesma rede Docker: `docker network inspect search-credit-network`
-3. Verificar configuração do Nginx em `nginx.conf`
-4. Reiniciar o frontend: `docker-compose restart`
-
-### Problema: Build falha com erro de SSR
-
-**Solução:** O projeto está configurado para build apenas client-side. Verifique se o `angular.json` não contém configurações de `server` ou `ssr`.
-
-### Problema: Testes falham
-
-**Soluções:**
-1. Verificar se `ActivatedRoute` está mockado nos testes
-2. Verificar se `HttpClientTestingModule` está importado
-3. Executar `npm install` para garantir dependências atualizadas
-
-## Contribuição
-
-Ao contribuir com este projeto, mantenha:
-- Padrões de código consistentes
-- Cobertura de testes adequada
-- Documentação atualizada
-- Separação de responsabilidades
-- Código limpo sem comentários desnecessários
-
-## Licença
-
-Este projeto é privado e proprietário.
-
-## Contato e Suporte
-
-Para questões técnicas ou problemas, consulte a documentação do projeto ou entre em contato com a equipe de desenvolvimento.
-
----
-
-**Última atualização:** 2024
-**Versão:** 1.0.0
+Para instruções detalhadas sobre inicialização do ambiente Docker completo (Backend + Worker + Frontend), consulte o [Guia de Inicialização Docker](GUIA_INICIALIZACAO.md).

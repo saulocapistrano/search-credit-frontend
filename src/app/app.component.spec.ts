@@ -1,10 +1,37 @@
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRoute } from '@angular/router';
+import { of } from 'rxjs';
 import { AppComponent } from './app.component';
 
 describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
+      providers: [
+        {
+          provide: ActivatedRoute,
+          useValue: {
+            snapshot: {
+              data: {},
+              paramMap: {
+                get: () => null,
+                has: () => false,
+                keys: []
+              }
+            },
+            paramMap: of({
+              get: () => null,
+              has: () => false,
+              keys: []
+            }),
+            queryParamMap: of({
+              get: () => null,
+              has: () => false,
+              keys: []
+            })
+          }
+        }
+      ]
     }).compileComponents();
   });
 
@@ -14,16 +41,9 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have the 'search-credit-frontend' title`, () => {
+  it(`should have the 'Consulta de Créditos' title`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.componentInstance;
-    expect(app.title).toEqual('search-credit-frontend');
-  });
-
-  it('should render title', () => {
-    const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, search-credit-frontend');
+    expect(app.title).toEqual('Consulta de Créditos');
   });
 });

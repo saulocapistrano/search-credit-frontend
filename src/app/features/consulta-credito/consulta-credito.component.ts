@@ -28,8 +28,19 @@ export class ConsultaCreditoComponent {
 
   private criarFormulario(): FormGroup {
     return this.formBuilder.group({
-      numeroCredito: ['', [Validators.required, Validators.minLength(1)]]
+      numeroCredito: [{ value: '', disabled: false }, [Validators.required, Validators.minLength(1)]]
     });
+  }
+
+  private atualizarEstadoFormulario(): void {
+    const control = this.consultaForm.get('numeroCredito');
+    if (control) {
+      if (this.isLoading) {
+        control.disable();
+      } else {
+        control.enable();
+      }
+    }
   }
 
   buscar(): void {
@@ -60,15 +71,18 @@ export class ConsultaCreditoComponent {
     this.errorMessage = null;
     this.credito = null;
     this.mostrarDetalhes = false;
+    this.atualizarEstadoFormulario();
 
     this.creditoService.buscarPorNumeroCredito(numeroCredito).subscribe({
       next: (resultado) => {
         this.isLoading = false;
         this.credito = resultado;
         this.mostrarDetalhes = true;
+        this.atualizarEstadoFormulario();
       },
       error: (error: HttpErrorResponse | Error) => {
         this.isLoading = false;
+        this.atualizarEstadoFormulario();
 
         if (error instanceof HttpErrorResponse) {
           if (error.status === 404) {
@@ -99,6 +113,8 @@ export class ConsultaCreditoComponent {
     this.credito = null;
     this.errorMessage = null;
     this.mostrarDetalhes = false;
+    this.isLoading = false;
+    this.atualizarEstadoFormulario();
   }
 
   fecharDetalhes(): void {

@@ -50,13 +50,39 @@
   }
 }
 
+@media (max-width: 767.98px) {
+  .navbar-brand {
+    font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+
+  .nav-link {
+    padding: 0.75rem 1rem;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+
+  .navbar-toggler {
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+  }
+}
+
 @media (max-width: 575.98px) {
   .app-main {
     margin-top: 56px;
   }
   
   .navbar-brand {
-    font-size: 1.1rem;
+    font-size: 0.95rem;
+    max-width: 150px;
+  }
+
+  .nav-link {
+    font-size: 0.9rem;
   }
 }
 

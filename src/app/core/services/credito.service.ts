@@ -66,7 +66,27 @@ export class CreditoService {
   }
 
   private handleErrorCredito(error: HttpErrorResponse): Observable<never> {
-    return throwError(() => error);
+    let errorMessage = 'Erro ao buscar crédito';
+
+    if (error.error instanceof ErrorEvent) {
+      errorMessage = `Erro: ${error.error.message}`;
+    } else {
+      switch (error.status) {
+        case HttpStatusCode.NotFound:
+          errorMessage = 'Crédito não encontrado para o número informado';
+          break;
+        case HttpStatusCode.BadRequest:
+          errorMessage = 'Número de crédito inválido';
+          break;
+        case HttpStatusCode.InternalServerError:
+          errorMessage = 'Erro interno do servidor. Tente novamente mais tarde';
+          break;
+        default:
+          errorMessage = error.error?.message || `Erro ${error.status}: ${error.message}`;
+      }
+    }
+
+    return throwError(() => new Error(errorMessage));
   }
 }
 

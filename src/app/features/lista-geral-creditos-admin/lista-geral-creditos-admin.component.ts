@@ -72,7 +72,9 @@ export class ListaGeralCreditosAdminComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        this.toastService.error('Erro ao carregar créditos: ' + (error.message || 'Erro desconhecido'));
+        const message = (error?.message || 'Erro desconhecido')
+          .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
+        this.toastService.error('Erro ao carregar créditos: ' + message);
       }
     });
   }
@@ -204,7 +206,9 @@ export class ListaGeralCreditosAdminComponent implements OnInit {
       },
       error: (error) => {
         this.isSubmittingAnalise = false;
-        this.toastService.error(error.message || 'Erro ao analisar crédito. Tente novamente.');
+        const message = (error?.message || 'Erro ao analisar crédito. Tente novamente.')
+          .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
+        this.toastService.error(message);
       }
     });
   }

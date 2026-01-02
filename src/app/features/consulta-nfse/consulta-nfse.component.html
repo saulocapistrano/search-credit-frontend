@@ -112,8 +112,8 @@
                           }
                         </td>
                         <td>
-                          <span class="badge bg-{{ getStatusBadgeClass(credito.status) }}">
-                            {{ credito.status }}
+                          <span class="badge {{ creditoStatusService.getStatusBadgeClass(credito.status) }}">
+                            {{ creditoStatusService.getStatusLabel(credito.status) }}
                           </span>
                         </td>
                       </tr>
@@ -164,8 +164,8 @@
               <div class="col-12 col-md-6">
                 <div class="detail-item">
                   <label class="detail-label">Status:</label>
-                  <span class="badge bg-{{ getStatusBadgeClass(creditoSelecionado.status) }}">
-                    {{ creditoSelecionado.status }}
+                  <span class="badge {{ creditoStatusService.getStatusBadgeClass(creditoSelecionado.status) }}">
+                    {{ creditoStatusService.getStatusLabel(creditoSelecionado.status) }}
                   </span>
                 </div>
               </div>

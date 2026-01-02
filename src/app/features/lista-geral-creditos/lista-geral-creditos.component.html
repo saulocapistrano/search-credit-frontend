@@ -87,8 +87,8 @@
                     <td>{{ formatarValor(credito.valorIssqn) }}</td>
                     <td>{{ formatarData(credito.dataConstituicao) }}</td>
                     <td>
-                      <span class="badge bg-{{ getStatusBadgeClass(credito.status) }}">
-                        {{ credito.status || '-' }}
+                      <span class="badge {{ creditoStatusService.getStatusBadgeClass(credito.status) }}">
+                        {{ creditoStatusService.getStatusLabel(credito.status || '-') }}
                       </span>
                     </td>
                   </tr>
@@ -106,7 +106,7 @@
                     <i class="fas fa-chevron-left"></i> Anterior
                   </a>
                 </li>
-                
+
                 @for (page of getPageNumbers(); track page) {
                   <li class="page-item" [class.active]="page === currentPage">
                     <a class="page-link" (click)="onPageChange(page)" href="javascript:void(0)">
@@ -174,8 +174,8 @@
                 <div class="detail-item">
                   <label class="detail-label">Status:</label>
                   @if (creditoSelecionado.status) {
-                    <span class="badge bg-{{ getStatusBadgeClass(creditoSelecionado.status) }}">
-                      {{ creditoSelecionado.status }}
+                    <span class="badge {{ creditoStatusService.getStatusBadgeClass(creditoSelecionado.status) }}">
+                      {{ creditoStatusService.getStatusLabel(creditoSelecionado.status) }}
                     </span>
                   } @else {
                     <span class="detail-value">Não informado</span>

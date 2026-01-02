@@ -26,7 +26,7 @@ const DEFAULT_ROLE: UserRole = 'admin-consulta';
  *
  * // Escutar mudanças de perfil
  * this.userRoleService.role$.subscribe(role => {
- *   console.log('Perfil alterado para:', role);
+ *   // ...
  * });
  * ```
  */

@@ -46,10 +46,6 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.currentRole === 'admin-full';
   }
 
-  canAccessListaGeralCreditos(): boolean {
-    return this.currentRole === 'admin-full';
-  }
-
   ngOnInit(): void {
     // Redirecionar na inicialização baseado no perfil atual
     const initialRole = this.userRoleService.getRole();

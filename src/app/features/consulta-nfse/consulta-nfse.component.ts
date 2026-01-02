@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CreditoService } from '../../core/services/credito.service';
 import { CreditoCacheService } from '../../core/services/credito-cache.service';
+import { CreditoStatusService } from '../../core/services/credito-status.service';
 import { CreditoResponseDto } from '../../core/models/credito-response.dto';
 
 @Component({
@@ -15,6 +16,7 @@ import { CreditoResponseDto } from '../../core/models/credito-response.dto';
 export class ConsultaNfseComponent {
   private readonly creditoService = inject(CreditoService);
   private readonly creditoCacheService = inject(CreditoCacheService);
+  readonly creditoStatusService = inject(CreditoStatusService);
   private readonly formBuilder = inject(FormBuilder);
 
   consultaForm: FormGroup;
@@ -147,19 +149,4 @@ export class ConsultaNfseComponent {
     return null;
   }
 
-  getStatusBadgeClass(status: string): string {
-    const statusLower = status?.toLowerCase() || '';
-
-    if (statusLower.includes('ativo') || statusLower.includes('aprovado')) {
-      return 'success';
-    }
-    if (statusLower.includes('pendente') || statusLower.includes('processando')) {
-      return 'warning';
-    }
-    if (statusLower.includes('cancelado') || statusLower.includes('rejeitado')) {
-      return 'danger';
-    }
-
-    return 'secondary';
-  }
 }

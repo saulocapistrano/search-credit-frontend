@@ -14,25 +14,76 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              routerLink="/consulta-nfse"
-              routerLinkActive="active"
-              [routerLinkActiveOptions]="{exact: false}">
-              Consulta por NFS-e
-            </a>
-          </li>
-          <li class="nav-item">
-            <a
-              class="nav-link"
-              routerLink="/consulta-credito"
-              routerLinkActive="active"
-              [routerLinkActiveOptions]="{exact: false}">
-              Consulta por Número do Crédito
-            </a>
-          </li>
+          @if (canAccessConsultaNfse()) {
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/consulta-nfse"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{exact: false}">
+                Consulta por NFS-e
+              </a>
+            </li>
+          }
+          @if (canAccessConsultaCredito()) {
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/consulta-credito"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{exact: false}">
+                Consulta por Número do Crédito
+              </a>
+            </li>
+          }
+          @if (canAccessSolicitacaoCredito()) {
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/solicitacao-credito"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{exact: false}">
+                Criação de Crédito
+              </a>
+            </li>
+          }
+          @if (canAccessMinhasSolicitacoes()) {
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/minhas-solicitacoes"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{exact: false}">
+                Meus Créditos
+              </a>
+            </li>
+          }
+          @if (canAccessListaGeral()) {
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/lista-geral-solicitacoes"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{exact: false}">
+                Lista Geral de Créditos (Admin)
+              </a>
+            </li>
+          }
+          @if (canAccessListaGeralCreditos()) {
+            <li class="nav-item">
+              <a
+                class="nav-link"
+                routerLink="/lista-geral-creditos"
+                routerLinkActive="active"
+                [routerLinkActiveOptions]="{exact: false}">
+                Lista Geral de Créditos
+              </a>
+            </li>
+          }
         </ul>
+        <div class="navbar-nav">
+          <app-user-profile-selector></app-user-profile-selector>
+        </div>
       </div>
     </div>
   </nav>
@@ -41,3 +92,5 @@
 <main class="app-main">
   <router-outlet />
 </main>
+
+<app-toast></app-toast>

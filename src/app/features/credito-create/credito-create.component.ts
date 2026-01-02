@@ -115,7 +115,9 @@ export class CreditoCreateComponent implements OnInit {
       },
       error: (error) => {
         this.isLoadingNumbers = false;
-        this.toastService.error('Erro ao carregar números sequenciais: ' + (error.message || 'Erro desconhecido'));
+        const message = (error?.message || 'Erro desconhecido')
+          .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
+        this.toastService.error('Erro ao carregar números sequenciais: ' + message);
       }
     });
   }
@@ -186,7 +188,9 @@ export class CreditoCreateComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        this.toastService.error(error.message || 'Erro ao criar crédito. Tente novamente.');
+        const message = (error?.message || 'Erro ao criar crédito. Tente novamente.')
+          .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
+        this.toastService.error(message);
       }
     });
   }

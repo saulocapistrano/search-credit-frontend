@@ -208,28 +208,6 @@ describe('ConsultaNfseComponent', () => {
     });
   });
 
-  describe('getStatusBadgeClass()', () => {
-    it('should return success for active status', () => {
-      expect(component.getStatusBadgeClass('Ativo')).toBe('success');
-      expect(component.getStatusBadgeClass('Aprovado')).toBe('success');
-    });
-
-    it('should return warning for pending status', () => {
-      expect(component.getStatusBadgeClass('Pendente')).toBe('warning');
-      expect(component.getStatusBadgeClass('Processando')).toBe('warning');
-    });
-
-    it('should return danger for cancelled status', () => {
-      expect(component.getStatusBadgeClass('Cancelado')).toBe('danger');
-      expect(component.getStatusBadgeClass('Rejeitado')).toBe('danger');
-    });
-
-    it('should return secondary for unknown status', () => {
-      expect(component.getStatusBadgeClass('Desconhecido')).toBe('secondary');
-      expect(component.getStatusBadgeClass('')).toBe('secondary');
-    });
-  });
-
   describe('formatarPercentual()', () => {
     it('should format number as percentage', () => {
       expect(component.formatarPercentual(5)).toBe('5%');

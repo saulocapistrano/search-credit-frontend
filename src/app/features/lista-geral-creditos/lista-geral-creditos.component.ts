@@ -5,6 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Subscription } from 'rxjs';
 import { CreditoService } from '../../core/services/credito.service';
 import { CreditoCacheService } from '../../core/services/credito-cache.service';
+import { CreditoStatusService } from '../../core/services/credito-status.service';
 import { UserRoleService } from '../../core/services/user-role.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CreditoResponseDto } from '../../core/models/credito-response.dto';
@@ -20,6 +21,7 @@ import { CreditoDetalhadoDto } from '../../core/models/credito-detalhado.dto';
 export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
   private readonly creditoService = inject(CreditoService);
   private readonly creditoCacheService = inject(CreditoCacheService);
+  readonly creditoStatusService = inject(CreditoStatusService);
   private readonly userRoleService = inject(UserRoleService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
@@ -53,7 +55,7 @@ export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
 
     // Carregar créditos do cache
     this.carregarCreditosDoCache();
-    
+
     // Escutar mudanças no cache
     this.cacheSubscription = this.creditoCacheService.creditos$.subscribe(() => {
       this.carregarCreditosDoCache();
@@ -87,7 +89,7 @@ export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
         const tipoCredito = credito.tipoCredito?.toLowerCase() || '';
         const status = credito.status?.toLowerCase() || '';
         const valorIssqn = credito.valorIssqn?.toString() || '';
-        
+
         return numeroCredito.includes(termoLower) ||
                numeroNfse.includes(termoLower) ||
                tipoCredito.includes(termoLower) ||
@@ -147,11 +149,11 @@ export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
       }
 
       if (typeof valorA === 'string' && typeof valorB === 'string') {
-        return this.sortDir === 'asc' 
+        return this.sortDir === 'asc'
           ? valorA.localeCompare(valorB)
           : valorB.localeCompare(valorA);
       } else {
-        return this.sortDir === 'asc' 
+        return this.sortDir === 'asc'
           ? valorA - valorB
           : valorB - valorA;
       }
@@ -175,26 +177,6 @@ export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
     }
     this.currentPage = 0;
     this.aplicarFiltroEBusca();
-  }
-
-  getStatusBadgeClass(status: string | undefined): string {
-    if (!status) {
-      return 'secondary';
-    }
-
-    const statusLower = status.toLowerCase();
-
-    if (statusLower.includes('ativo') || statusLower.includes('aprovado')) {
-      return 'success';
-    }
-    if (statusLower.includes('pendente') || statusLower.includes('processando')) {
-      return 'warning';
-    }
-    if (statusLower.includes('cancelado') || statusLower.includes('rejeitado')) {
-      return 'danger';
-    }
-
-    return 'secondary';
   }
 
   formatarData(data: string | undefined): string {
@@ -260,7 +242,7 @@ export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
       },
       error: (error: HttpErrorResponse | Error) => {
         this.isLoadingDetalhes = false;
-        
+
         if (error instanceof HttpErrorResponse) {
           if (error.status === 404) {
             this.toastService.error('Crédito não encontrado para o número informado.');

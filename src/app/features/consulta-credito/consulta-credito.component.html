@@ -119,8 +119,8 @@
               <div class="detail-item">
                 <label class="detail-label">Status:</label>
                 @if (credito.status) {
-                  <span class="badge bg-{{ getStatusBadgeClass(credito.status) }}">
-                    {{ credito.status }}
+                  <span class="badge {{ creditoStatusService.getStatusBadgeClass(credito.status) }}">
+                    {{ creditoStatusService.getStatusLabel(credito.status) }}
                   </span>
                 } @else {
                   <span class="detail-value">Não informado</span>

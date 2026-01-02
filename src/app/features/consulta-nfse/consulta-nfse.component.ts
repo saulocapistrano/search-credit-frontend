@@ -84,7 +84,9 @@ export class ConsultaNfseComponent {
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.message || 'Erro ao buscar créditos';
+        const message = (error?.message || 'Erro ao buscar créditos')
+          .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
+        this.errorMessage = message;
         this.creditos = [];
         this.atualizarEstadoFormulario();
       }

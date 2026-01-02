@@ -1,7 +1,10 @@
 import { Component, OnInit, inject } from '@angular/core';
-import { CommonModule, FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { CreditoService } from '../../core/services/credito.service';
 import { CreditoWorkflowService } from '../../core/services/credito-workflow.service';
+import { CreditoStatusService } from '../../core/services/credito-status.service';
 import { UserRoleService } from '../../core/services/user-role.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CreditoWorkflowResponseDto } from '../../core/models/credito-workflow.dto';
@@ -15,7 +18,9 @@ import { AnaliseCreditoDto } from '../../core/models/analise-credito.dto';
   styleUrl: './lista-geral-creditos-admin.component.scss'
 })
 export class ListaGeralCreditosAdminComponent implements OnInit {
+  private readonly creditoService = inject(CreditoService);
   private readonly creditoWorkflowService = inject(CreditoWorkflowService);
+  readonly creditoStatusService = inject(CreditoStatusService);
   private readonly userRoleService = inject(UserRoleService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
@@ -58,7 +63,7 @@ export class ListaGeralCreditosAdminComponent implements OnInit {
   carregarCreditos(): void {
     this.isLoading = true;
 
-    this.creditoWorkflowService.buscarTodasSolicitacoes(this.currentPage, this.pageSize, this.sortBy, this.sortDir).subscribe({
+    this.creditoService.buscarTodasSolicitacoes(this.currentPage, this.pageSize, this.sortBy, this.sortDir).subscribe({
       next: (response) => {
         this.creditos = response.content || [];
         this.totalElements = response.totalElements || 0;
@@ -89,32 +94,6 @@ export class ListaGeralCreditosAdminComponent implements OnInit {
     }
     this.currentPage = 0;
     this.carregarCreditos();
-  }
-
-  getStatusBadgeClass(status: string): string {
-    switch (status?.toUpperCase()) {
-      case 'EM_ANALISE':
-        return 'bg-info';
-      case 'APROVADO':
-        return 'bg-success';
-      case 'REPROVADO':
-        return 'bg-danger';
-      default:
-        return 'bg-secondary';
-    }
-  }
-
-  getStatusLabel(status: string): string {
-    switch (status?.toUpperCase()) {
-      case 'EM_ANALISE':
-        return 'Em Análise';
-      case 'APROVADO':
-        return 'Aprovado';
-      case 'REPROVADO':
-        return 'Reprovado';
-      default:
-        return status || 'Desconhecido';
-    }
   }
 
   verComprovante(comprovanteUrl: string): void {

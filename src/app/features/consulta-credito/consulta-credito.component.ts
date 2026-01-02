@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CreditoService } from '../../core/services/credito.service';
+import { CreditoCacheService } from '../../core/services/credito-cache.service';
 import { CreditoDetalhadoDto } from '../../core/models/credito-detalhado.dto';
+import { CreditoResponseDto } from '../../core/models/credito-response.dto';
 
 @Component({
   selector: 'app-consulta-credito',
@@ -14,6 +16,7 @@ import { CreditoDetalhadoDto } from '../../core/models/credito-detalhado.dto';
 })
 export class ConsultaCreditoComponent {
   private readonly creditoService = inject(CreditoService);
+  private readonly creditoCacheService = inject(CreditoCacheService);
   private readonly formBuilder = inject(FormBuilder);
 
   consultaForm: FormGroup;
@@ -78,6 +81,24 @@ export class ConsultaCreditoComponent {
         this.isLoading = false;
         this.credito = resultado;
         this.mostrarDetalhes = true;
+        // Converter CreditoDetalhadoDto para CreditoResponseDto e armazenar no cache
+        const creditoResponse: CreditoResponseDto = {
+          id: resultado.numeroCredito ? parseInt(resultado.numeroCredito) || 0 : 0,
+          numeroCredito: resultado.numeroCredito,
+          numeroNfse: resultado.numeroNfse,
+          valor: resultado.valor || 0,
+          dataEmissao: resultado.dataEmissao || '',
+          status: resultado.status || '',
+          dataConstituicao: resultado.dataConstituicao,
+          valorIssqn: resultado.valorIssqn,
+          tipoCredito: resultado.tipoCredito,
+          simplesNacional: typeof resultado.simplesNacional === 'boolean' ? resultado.simplesNacional : undefined,
+          aliquota: resultado.aliquota,
+          valorFaturado: resultado.valorFaturado,
+          valorDeducao: resultado.valorDeducao,
+          baseCalculo: resultado.baseCalculo
+        };
+        this.creditoCacheService.adicionarCredito(creditoResponse);
         this.atualizarEstadoFormulario();
       },
       error: (error: HttpErrorResponse | Error) => {

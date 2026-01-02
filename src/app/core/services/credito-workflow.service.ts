@@ -1,7 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { HttpStatusCode } from '@angular/common/http';
 import { CreditoWorkflowDto, CreditoWorkflowResponseDto } from '../models/credito-workflow.dto';
 import { AnaliseCreditoDto } from '../models/analise-credito.dto';
@@ -13,20 +13,6 @@ export class CreditoWorkflowService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api';
 
-  getNextNumeroCredito(): Observable<string> {
-    const url = `${this.apiUrl}/creditos/next-numero-credito`;
-    return this.http.get(url, { responseType: 'text' }).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  getNextNumeroNfse(): Observable<string> {
-    const url = `${this.apiUrl}/creditos/next-numero-nfse`;
-    return this.http.get(url, { responseType: 'text' }).pipe(
-      catchError(this.handleError)
-    );
-  }
-
   enviarSolicitacao(solicitacao: CreditoWorkflowDto, comprovanteUrl: string): Observable<CreditoWorkflowResponseDto> {
     const payload = {
       ...solicitacao,
@@ -36,33 +22,6 @@ export class CreditoWorkflowService {
     const url = `${this.apiUrl}/creditos`;
 
     return this.http.post<CreditoWorkflowResponseDto>(url, payload).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  buscarMinhasSolicitacoes(nomeSolicitante: string, page: number = 0, size: number = 10): Observable<{ content: CreditoWorkflowResponseDto[], totalElements: number, totalPages: number, size: number, number: number }> {
-    const url = `${this.apiUrl}/creditos`;
-    const params = {
-      nomeSolicitante: encodeURIComponent(nomeSolicitante),
-      page: page.toString(),
-      size: size.toString()
-    };
-
-    return this.http.get<{ content: CreditoWorkflowResponseDto[], totalElements: number, totalPages: number, size: number, number: number }>(url, { params }).pipe(
-      catchError(this.handleError)
-    );
-  }
-
-  buscarTodasSolicitacoes(page: number = 0, size: number = 10, sortBy: string = 'dataSolicitacao', sortDir: string = 'desc'): Observable<{ content: CreditoWorkflowResponseDto[], totalElements: number, totalPages: number, size: number, number: number }> {
-    const url = `${this.apiUrl}/creditos/todas`;
-    const params = {
-      page: page.toString(),
-      size: size.toString(),
-      sortBy,
-      sortDir
-    };
-
-    return this.http.get<{ content: CreditoWorkflowResponseDto[], totalElements: number, totalPages: number, size: number, number: number }>(url, { params }).pipe(
       catchError(this.handleError)
     );
   }

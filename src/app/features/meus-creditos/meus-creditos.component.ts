@@ -63,7 +63,9 @@ export class MeusCreditosComponent implements OnInit {
       },
       error: (error) => {
         this.isLoading = false;
-        this.toastService.error('Erro ao carregar créditos: ' + (error.message || 'Erro desconhecido'));
+        const message = (error?.message || 'Erro desconhecido')
+          .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
+        this.toastService.error('Erro ao carregar créditos: ' + message);
       }
     });
   }

@@ -14,7 +14,7 @@ import { UserRoleService, UserRole } from './core/services/user-role.service';
 })
 export class AppComponent implements OnInit, OnDestroy {
   title = 'Consulta de Créditos';
-  
+
   private readonly router = inject(Router);
   private readonly userRoleService = inject(UserRoleService);
   private roleSubscription?: Subscription;
@@ -24,7 +24,7 @@ export class AppComponent implements OnInit, OnDestroy {
 
   // Propriedades para controle do menu
   currentRole: UserRole = 'admin-consulta';
-  
+
   // Métodos para verificar acesso aos itens do menu
   canAccessConsultaNfse(): boolean {
     return this.currentRole === 'admin-consulta';
@@ -34,11 +34,11 @@ export class AppComponent implements OnInit, OnDestroy {
     return this.currentRole === 'admin-consulta';
   }
 
-  canAccessSolicitacaoCredito(): boolean {
+  canAccessCreditoCreate(): boolean {
     return this.currentRole === 'admin-solicitacao' || this.currentRole === 'admin-full';
   }
 
-  canAccessMinhasSolicitacoes(): boolean {
+  canAccessMeusCreditos(): boolean {
     return this.currentRole === 'admin-solicitacao' || this.currentRole === 'admin-full';
   }
 
@@ -85,17 +85,17 @@ export class AppComponent implements OnInit, OnDestroy {
 
   private redirectBasedOnRole(role: UserRole, isInitialLoad: boolean): void {
     const currentUrl = this.router.url;
-    
+
     // Mapear perfil para rota destino (dashboard inicial)
     let targetRoute: string | null = null;
-    
+
     switch (role) {
       case 'admin-consulta':
         // Admin Consulta → Consulta por NFS-e
         targetRoute = '/consulta-nfse';
         break;
       case 'admin-solicitacao':
-        // Admin Solicitação → Solicitação de Crédito
+        // Admin Crédito → Criação de Crédito
         targetRoute = '/solicitacao-credito';
         break;
       case 'admin-full':

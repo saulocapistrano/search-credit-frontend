@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { forkJoin } from 'rxjs';
+import { CreditoService } from '../../core/services/credito.service';
 import { CreditoWorkflowService } from '../../core/services/credito-workflow.service';
 import { ComprovanteService } from '../../core/services/comprovante.service';
 import { PadroesService } from '../../core/services/padroes.service';
@@ -22,6 +23,7 @@ const DEDUCAO_PERCENTUAL = 0.15; // 15%
 })
 export class CreditoCreateComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
+  private readonly creditoService = inject(CreditoService);
   private readonly creditoWorkflowService = inject(CreditoWorkflowService);
   private readonly comprovanteService = inject(ComprovanteService);
   private readonly padroesService = inject(PadroesService);
@@ -101,8 +103,8 @@ export class CreditoCreateComponent implements OnInit {
     this.isLoadingNumbers = true;
 
     forkJoin({
-      numeroCredito: this.creditoWorkflowService.getNextNumeroCredito(),
-      numeroNfse: this.creditoWorkflowService.getNextNumeroNfse()
+      numeroCredito: this.creditoService.getNextNumeroCredito(),
+      numeroNfse: this.creditoService.getNextNumeroNfse()
     }).subscribe({
       next: (response) => {
         this.creditoForm.patchValue({
@@ -122,7 +124,7 @@ export class CreditoCreateComponent implements OnInit {
     const input = event.target as HTMLInputElement;
     if (input.files && input.files.length > 0) {
       const file = input.files[0];
-      
+
       // Validar tipo de arquivo
       if (!ALLOWED_FILE_TYPES.includes(file.type)) {
         this.toastService.error('Tipo de arquivo não permitido. Use PDF, JPG ou PNG');
@@ -197,7 +199,7 @@ export class CreditoCreateComponent implements OnInit {
     });
     this.comprovanteFile = null;
     this.fileName = '';
-    
+
     // Recarregar números sequenciais
     this.carregarDadosIniciais();
   }

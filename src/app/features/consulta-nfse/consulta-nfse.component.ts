@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CreditoService } from '../../core/services/credito.service';
+import { CreditoCacheService } from '../../core/services/credito-cache.service';
 import { CreditoResponseDto } from '../../core/models/credito-response.dto';
 
 @Component({
@@ -13,6 +14,7 @@ import { CreditoResponseDto } from '../../core/models/credito-response.dto';
 })
 export class ConsultaNfseComponent {
   private readonly creditoService = inject(CreditoService);
+  private readonly creditoCacheService = inject(CreditoCacheService);
   private readonly formBuilder = inject(FormBuilder);
 
   consultaForm: FormGroup;
@@ -71,6 +73,8 @@ export class ConsultaNfseComponent {
       next: (resultado) => {
         this.isLoading = false;
         this.creditos = resultado;
+        // Armazenar créditos no cache
+        this.creditoCacheService.adicionarCreditos(resultado);
         this.atualizarEstadoFormulario();
         if (resultado.length === 0) {
           this.errorMessage = 'Nenhum crédito encontrado para o número de NFSe informado';

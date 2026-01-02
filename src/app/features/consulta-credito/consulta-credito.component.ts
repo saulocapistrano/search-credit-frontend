@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { HttpErrorResponse } from '@angular/common/http';
 import { CreditoService } from '../../core/services/credito.service';
 import { CreditoCacheService } from '../../core/services/credito-cache.service';
+import { CreditoStatusService } from '../../core/services/credito-status.service';
 import { CreditoDetalhadoDto } from '../../core/models/credito-detalhado.dto';
 import { CreditoResponseDto } from '../../core/models/credito-response.dto';
 
@@ -17,6 +18,7 @@ import { CreditoResponseDto } from '../../core/models/credito-response.dto';
 export class ConsultaCreditoComponent {
   private readonly creditoService = inject(CreditoService);
   private readonly creditoCacheService = inject(CreditoCacheService);
+  readonly creditoStatusService = inject(CreditoStatusService);
   private readonly formBuilder = inject(FormBuilder);
 
   consultaForm: FormGroup;
@@ -158,26 +160,6 @@ export class ConsultaCreditoComponent {
       }
     }
     return null;
-  }
-
-  getStatusBadgeClass(status: string | undefined): string {
-    if (!status) {
-      return 'secondary';
-    }
-
-    const statusLower = status.toLowerCase();
-
-    if (statusLower.includes('ativo') || statusLower.includes('aprovado')) {
-      return 'success';
-    }
-    if (statusLower.includes('pendente') || statusLower.includes('processando')) {
-      return 'warning';
-    }
-    if (statusLower.includes('cancelado') || statusLower.includes('rejeitado')) {
-      return 'danger';
-    }
-
-    return 'secondary';
   }
 
   formatarSimplesNacional(valor: string | boolean | undefined): string {

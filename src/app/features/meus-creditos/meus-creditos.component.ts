@@ -1,7 +1,8 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { CreditoWorkflowService } from '../../core/services/credito-workflow.service';
+import { CreditoService } from '../../core/services/credito.service';
+import { CreditoStatusService } from '../../core/services/credito-status.service';
 import { UserRoleService } from '../../core/services/user-role.service';
 import { ToastService } from '../../core/services/toast.service';
 import { CreditoWorkflowResponseDto } from '../../core/models/credito-workflow.dto';
@@ -14,7 +15,8 @@ import { CreditoWorkflowResponseDto } from '../../core/models/credito-workflow.d
   styleUrl: './meus-creditos.component.scss'
 })
 export class MeusCreditosComponent implements OnInit {
-  private readonly creditoWorkflowService = inject(CreditoWorkflowService);
+  private readonly creditoService = inject(CreditoService);
+  readonly creditoStatusService = inject(CreditoStatusService);
   private readonly userRoleService = inject(UserRoleService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
@@ -52,7 +54,7 @@ export class MeusCreditosComponent implements OnInit {
   carregarCreditos(): void {
     this.isLoading = true;
 
-    this.creditoWorkflowService.buscarMinhasSolicitacoes(this.nomeSolicitante, this.currentPage, this.pageSize).subscribe({
+    this.creditoService.buscarMinhasSolicitacoes(this.nomeSolicitante, this.currentPage, this.pageSize).subscribe({
       next: (response) => {
         this.creditos = response.content || [];
         this.totalElements = response.totalElements || 0;
@@ -88,32 +90,6 @@ export class MeusCreditosComponent implements OnInit {
       pages.push(i);
     }
     return pages;
-  }
-
-  getStatusBadgeClass(status: string): string {
-    switch (status?.toUpperCase()) {
-      case 'EM_ANALISE':
-        return 'bg-info';
-      case 'APROVADO':
-        return 'bg-success';
-      case 'REPROVADO':
-        return 'bg-danger';
-      default:
-        return 'bg-secondary';
-    }
-  }
-
-  getStatusLabel(status: string): string {
-    switch (status?.toUpperCase()) {
-      case 'EM_ANALISE':
-        return 'Em Análise';
-      case 'APROVADO':
-        return 'Aprovado';
-      case 'REPROVADO':
-        return 'Reprovado';
-      default:
-        return status || 'Desconhecido';
-    }
   }
 
   verComprovante(comprovanteUrl: string): void {

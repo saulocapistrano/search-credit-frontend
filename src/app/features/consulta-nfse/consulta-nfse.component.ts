@@ -105,7 +105,6 @@ export class ConsultaNfseComponent {
   }
 
   exibirDetalhes(credito: CreditoResponseDto): void {
-    console.log('Crédito selecionado:', credito);
     this.creditoSelecionado = credito;
     this.mostrarDetalhes = true;
   }

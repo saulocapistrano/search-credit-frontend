@@ -19,7 +19,7 @@ export class UserProfileSelectorComponent implements OnInit, OnDestroy {
   roles: { value: UserRole; label: string }[] = [
     { value: 'admin-full', label: 'Admin Full' },
     { value: 'admin-consulta', label: 'Admin Consulta' },
-    { value: 'admin-solicitacao', label: 'Admin Solicitação' }
+    { value: 'admin-solicitacao', label: 'Admin Crédito' }
   ];
 
   ngOnInit(): void {

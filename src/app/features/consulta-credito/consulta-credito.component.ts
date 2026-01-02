@@ -119,7 +119,8 @@ export class ConsultaCreditoComponent {
           }
         } else {
           if (error.message) {
-            this.errorMessage = error.message;
+            this.errorMessage = error.message
+              .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
           } else {
             this.errorMessage = 'Erro ao buscar crédito';
           }

@@ -15,6 +15,15 @@ const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image
 const DEDUCAO_PERCENTUAL = 0.15; // 15%
 const MAX_SIZE_MB = 5;
 
+const TOAST_MESSAGES = {
+  submitSuccess: 'Solicitação de crédito cadastrada com sucesso.',
+  submitErrorFallback: 'Não foi possível cadastrar a solicitação de crédito. Verifique os dados e tente novamente.',
+  uploadTooLarge: 'O arquivo de comprovante excede o tamanho máximo permitido. Envie um arquivo menor.',
+  networkError: 'Não foi possível conectar ao servidor. Tente novamente em instantes.'
+} as const;
+
+const NAVIGATION_DELAY_MS = 400;
+
 @Component({
   selector: 'app-credito-create',
   standalone: true,
@@ -168,6 +177,10 @@ export class CreditoCreateComponent implements OnInit {
   }
 
   onSubmit(): void {
+    if (this.isLoading) {
+      return;
+    }
+
     if (this.creditoForm.invalid) {
       this.markFormGroupTouched(this.creditoForm);
       this.toastService.error('Por favor, preencha todos os campos corretamente');
@@ -214,24 +227,30 @@ export class CreditoCreateComponent implements OnInit {
     this.creditoService.criarCredito(formData).subscribe({
       next: (_response: CreditoAdminResponseDto) => {
         this.isLoading = false;
-        this.toastService.success('Cadastro realizado com sucesso!');
+        this.toastService.success(TOAST_MESSAGES.submitSuccess);
 
         const role = this.userRoleService.getRole();
-        if (role === 'admin-full') {
-          this.router.navigate(['/lista-geral-creditos']);
-        } else {
-          this.router.navigate(['/meus-creditos']);
-        }
+
+        const targetRoute = role === 'admin-consulta' ? '/meus-creditos' : '/lista-geral-creditos';
+        setTimeout(() => {
+          this.router.navigate([targetRoute]);
+        }, NAVIGATION_DELAY_MS);
       },
       error: (error: HttpErrorResponse) => {
         this.isLoading = false;
 
-        if (error.status === 413) {
-          this.toastService.error('Arquivo muito grande. Máx: 5MB');
+        if (error.status === 0) {
+          this.toastService.error(TOAST_MESSAGES.networkError);
           return;
         }
 
-        this.toastService.error(error.error?.message ?? 'Erro ao criar crédito');
+        if (error.status === 413) {
+          this.toastService.error(TOAST_MESSAGES.uploadTooLarge);
+          return;
+        }
+
+        const backendMessage = (error.error as { message?: string } | undefined)?.message;
+        this.toastService.error(backendMessage ?? TOAST_MESSAGES.submitErrorFallback);
       }
     });
   }

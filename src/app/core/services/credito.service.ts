@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { HttpStatusCode } from '@angular/common/http';
@@ -7,12 +7,39 @@ import { CreditoResponseDto } from '../models/credito-response.dto';
 import { CreditoDetalhadoDto } from '../models/credito-detalhado.dto';
 import { CreditoWorkflowResponseDto } from '../models/credito-workflow.dto';
 
+export type PageResponse<T> = {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+};
+
 @Injectable({
   providedIn: 'root'
 })
 export class CreditoService {
   private readonly http = inject(HttpClient);
   private readonly apiUrl = '/api';
+
+  buscarCreditosPaginados(
+    page: number,
+    size: number,
+    sortBy: string,
+    sortDir: string
+  ): Observable<PageResponse<CreditoResponseDto>> {
+    const url = `${this.apiUrl}/creditos`;
+
+    const params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sortBy', sortBy)
+      .set('sortDir', sortDir);
+
+    return this.http.get<PageResponse<CreditoResponseDto>>(url, { params }).pipe(
+      catchError(this.handleError)
+    );
+  }
 
   getNextNumeroCredito(): Observable<string> {
     const url = `${this.apiUrl}/creditos/next-numero-credito`;
@@ -53,31 +80,12 @@ export class CreditoService {
     );
   }
 
-  buscarMinhasSolicitacoes(nomeSolicitante: string, page: number = 0, size: number = 10): Observable<{ content: CreditoWorkflowResponseDto[], totalElements: number, totalPages: number, size: number, number: number }> {
-    const url = `${this.apiUrl}/creditos`;
-    const params = {
-      nomeSolicitante: encodeURIComponent(nomeSolicitante),
-      page: page.toString(),
-      size: size.toString()
-    };
-
-    return this.http.get<{ content: CreditoWorkflowResponseDto[], totalElements: number, totalPages: number, size: number, number: number }>(url, { params }).pipe(
-      catchError(this.handleErrorWorkflowGet)
-    );
-  }
-
-  buscarTodasSolicitacoes(page: number = 0, size: number = 10, sortBy: string = 'dataSolicitacao', sortDir: string = 'desc'): Observable<{ content: CreditoWorkflowResponseDto[], totalElements: number, totalPages: number, size: number, number: number }> {
-    const url = `${this.apiUrl}/creditos/todas`;
-    const params = {
-      page: page.toString(),
-      size: size.toString(),
-      sortBy,
-      sortDir
-    };
-
-    return this.http.get<{ content: CreditoWorkflowResponseDto[], totalElements: number, totalPages: number, size: number, number: number }>(url, { params }).pipe(
-      catchError(this.handleErrorWorkflowGet)
-    );
+  buscarMinhasSolicitacoes(
+    _nomeSolicitante: string,
+    _page: number = 0,
+    _size: number = 10
+  ): Observable<{ content: CreditoWorkflowResponseDto[]; totalElements: number; totalPages: number; size: number; number: number }> {
+    return throwError(() => new Error('Operação não suportada pela API atual. Utilize a busca por NFSe ou Número do Crédito.'));
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {

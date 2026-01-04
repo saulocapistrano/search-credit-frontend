@@ -12,6 +12,7 @@ export interface CreditoDetalhadoDto {
   valor?: number;
   dataEmissao?: string;
   status?: string;
+  situacao?: string;
   [key: string]: unknown;
 }
 

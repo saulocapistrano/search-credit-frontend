@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { CreditoService, PageResponse } from '../../core/services/credito.service';
@@ -12,7 +13,7 @@ import { CreditoDetalhadoDto } from '../../core/models/credito-detalhado.dto';
 @Component({
   selector: 'app-lista-geral-creditos',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './lista-geral-creditos.component.html',
   styleUrl: './lista-geral-creditos.component.scss'
 })
@@ -35,9 +36,15 @@ export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
   sortDir = 'DESC';
 
   creditoSelecionado: CreditoDetalhadoDto | null = null;
+  creditoSelecionadoId: number | null = null;
+  creditoSelecionadoListaRef: CreditoResponseDto | null = null;
   mostrarDetalhes = false;
   isLoadingDetalhes = false;
   isLoadingLista = false;
+
+  analiseStatus: 'APROVADO' | 'REPROVADO' | null = null;
+  comentarioAnalise = '';
+  isSavingAnalise = false;
 
   ngOnInit(): void {
     const role = this.userRoleService.getRole();
@@ -145,6 +152,11 @@ export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
     this.isLoadingDetalhes = true;
     this.mostrarDetalhes = false;
     this.creditoSelecionado = null;
+    this.creditoSelecionadoId = credito.id;
+    this.creditoSelecionadoListaRef = credito;
+    this.analiseStatus = null;
+    this.comentarioAnalise = '';
+    this.isSavingAnalise = false;
 
     this.creditoService.buscarPorNumeroCredito(credito.numeroCredito).subscribe({
       next: (resultado: CreditoDetalhadoDto) => {
@@ -173,6 +185,89 @@ export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
   fecharDetalhes(): void {
     this.mostrarDetalhes = false;
     this.creditoSelecionado = null;
+    this.creditoSelecionadoId = null;
+    this.creditoSelecionadoListaRef = null;
+    this.analiseStatus = null;
+    this.comentarioAnalise = '';
+    this.isSavingAnalise = false;
+  }
+
+  get podeAnalisar(): boolean {
+    return this.userRoleService.isAdminFull() && this.getStatusNormalizado(this.creditoSelecionado?.status) === 'EM_ANALISE';
+  }
+
+  salvarAnalise(): void {
+    if (!this.podeAnalisar || !this.creditoSelecionadoId || !this.analiseStatus) {
+      return;
+    }
+
+    if (this.isSavingAnalise) {
+      return;
+    }
+
+    this.isSavingAnalise = true;
+
+    const novoStatus: 'APROVADO' | 'REPROVADO' = this.analiseStatus;
+
+    const payload = {
+      status: novoStatus,
+      aprovadoPor: this.getAprovadoPor(),
+      comentarioAnalise: this.comentarioAnalise?.trim() ? this.comentarioAnalise.trim() : undefined
+    };
+
+    this.creditoService.analisarCredito(this.creditoSelecionadoId, payload).subscribe({
+      next: () => {
+        this.isSavingAnalise = false;
+
+        if (novoStatus === 'APROVADO') {
+          this.toastService.success('Crédito aprovado com sucesso');
+        } else {
+          this.toastService.success('Crédito reprovado com sucesso');
+        }
+
+        if (this.creditoSelecionadoListaRef) {
+          this.creditoSelecionadoListaRef.status = novoStatus;
+        }
+        if (this.creditoSelecionado) {
+          this.creditoSelecionado.status = novoStatus;
+        }
+
+        this.fecharDetalhes();
+      },
+      error: () => {
+        this.isSavingAnalise = false;
+        this.toastService.error('Erro ao atualizar status do crédito');
+      }
+    });
+  }
+
+  cancelarAnalise(): void {
+    this.fecharDetalhes();
+  }
+
+  private getAprovadoPor(): 'ADMIN_FULL' | 'ADMIN_CONSULTA' | 'ADMIN_CREDITO' {
+    const role = this.userRoleService.getRole();
+    if (role === 'admin-full') {
+      return 'ADMIN_FULL';
+    }
+    if (role === 'admin-consulta') {
+      return 'ADMIN_CONSULTA';
+    }
+    return 'ADMIN_CREDITO';
+  }
+
+  private getStatusNormalizado(status: unknown): string {
+    if (!status) {
+      return '';
+    }
+    return status
+      .toString()
+      .trim()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toUpperCase()
+      .replace(/[^A-Z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
   }
 
   formatarSimplesNacional(valor: string | boolean | undefined): string {

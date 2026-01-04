@@ -55,15 +55,15 @@ export class MeusCreditosComponent implements OnInit {
     this.isLoading = true;
 
     this.creditoService.buscarMinhasSolicitacoes(this.nomeSolicitante, this.currentPage, this.pageSize).subscribe({
-      next: (response) => {
+      next: (response: { content: CreditoWorkflowResponseDto[]; totalElements: number; totalPages: number; size: number; number: number }) => {
         this.creditos = response.content || [];
         this.totalElements = response.totalElements || 0;
         this.totalPages = response.totalPages || 0;
         this.isLoading = false;
       },
-      error: (error) => {
+      error: (error: unknown) => {
         this.isLoading = false;
-        const message = (error?.message || 'Erro desconhecido')
+        const message = (error instanceof Error ? error.message : 'Erro desconhecido')
           .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
         this.toastService.error('Erro ao carregar créditos: ' + message);
       }

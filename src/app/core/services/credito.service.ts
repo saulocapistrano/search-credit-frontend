@@ -88,6 +88,17 @@ export class CreditoService {
     return throwError(() => new Error('Operação não suportada pela API atual. Utilize a busca por NFSe ou Número do Crédito.'));
   }
 
+  analisarCredito(
+    id: number,
+    payload: {
+      status: 'APROVADO' | 'REPROVADO';
+      aprovadoPor: 'ADMIN_FULL' | 'ADMIN_CONSULTA' | 'ADMIN_CREDITO';
+      comentarioAnalise?: string;
+    }
+  ): Observable<void> {
+    return this.http.put<void>(`/api/creditos/${id}/analise`, payload);
+  }
+
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Erro ao buscar créditos';
 

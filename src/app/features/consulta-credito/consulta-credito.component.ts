@@ -91,6 +91,7 @@ export class ConsultaCreditoComponent {
           valor: resultado.valor || 0,
           dataEmissao: resultado.dataEmissao || '',
           status: resultado.status || '',
+          situacao: resultado.situacao,
           dataConstituicao: resultado.dataConstituicao,
           valorIssqn: resultado.valorIssqn,
           tipoCredito: resultado.tipoCredito,
@@ -181,5 +182,9 @@ export class ConsultaCreditoComponent {
       return 'Não informado';
     }
     return `${valor}%`;
+  }
+
+  getSituacao(credito: unknown): string {
+    return this.creditoStatusService.extractSituacao(credito);
   }
 }

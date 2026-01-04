@@ -2,17 +2,18 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { forkJoin } from 'rxjs';
-import { CreditoService } from '../../core/services/credito.service';
-import { CreditoWorkflowService } from '../../core/services/credito-workflow.service';
-import { ComprovanteService } from '../../core/services/comprovante.service';
+import { CreditoAdminResponseDto, CreditoService } from '../../core/services/credito.service';
 import { PadroesService } from '../../core/services/padroes.service';
 import { UserRoleService } from '../../core/services/user-role.service';
 import { ToastService } from '../../core/services/toast.service';
 
+import { HttpErrorResponse } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_FILE_TYPES = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
 const DEDUCAO_PERCENTUAL = 0.15; // 15%
+const MAX_SIZE_MB = 5;
 
 @Component({
   selector: 'app-credito-create',
@@ -24,8 +25,6 @@ const DEDUCAO_PERCENTUAL = 0.15; // 15%
 export class CreditoCreateComponent implements OnInit {
   private readonly formBuilder = inject(FormBuilder);
   private readonly creditoService = inject(CreditoService);
-  private readonly creditoWorkflowService = inject(CreditoWorkflowService);
-  private readonly comprovanteService = inject(ComprovanteService);
   private readonly padroesService = inject(PadroesService);
   private readonly userRoleService = inject(UserRoleService);
   private readonly toastService = inject(ToastService);
@@ -35,7 +34,6 @@ export class CreditoCreateComponent implements OnInit {
   comprovanteFile: File | null = null;
   fileName: string = '';
   isLoading = false;
-  isLoadingNumbers = false;
   canAccess = false;
 
   // Opções dos selects
@@ -63,8 +61,8 @@ export class CreditoCreateComponent implements OnInit {
     // Criar formulário
     this.creditoForm = this.criarFormulario();
 
-    // Carregar números sequenciais e data atual
-    this.carregarDadosIniciais();
+    // Buscar números em paralelo (somente exibição)
+    this.carregarNumeros();
   }
 
   private criarFormulario(): FormGroup {
@@ -72,8 +70,8 @@ export class CreditoCreateComponent implements OnInit {
     const dataFormatada = hoje.toISOString().split('T')[0];
 
     const form = this.formBuilder.group({
-      numeroCredito: [{ value: '', disabled: true }, [Validators.required]],
-      numeroNfse: [{ value: '', disabled: true }, [Validators.required]],
+      numeroCredito: [''],
+      numeroNfse: [''],
       dataConstituicao: [dataFormatada, [Validators.required]],
       valorIssqn: ['', [Validators.required]],
       tipoCredito: ['ISSQN', [Validators.required]],
@@ -82,8 +80,7 @@ export class CreditoCreateComponent implements OnInit {
       valorFaturado: ['', [Validators.required, Validators.min(0)]],
       valorDeducao: [{ value: '', disabled: true }, [Validators.required]],
       baseCalculo: ['', [Validators.required]],
-      nomeSolicitante: ['', [Validators.required, Validators.minLength(3)]],
-      comprovanteRenda: [null, [Validators.required]]
+      nomeSolicitante: ['', [Validators.required, Validators.minLength(3)]]
     });
 
     // Escutar mudanças no valorFaturado para calcular valorDeducao
@@ -99,27 +96,44 @@ export class CreditoCreateComponent implements OnInit {
     return form;
   }
 
-  private carregarDadosIniciais(): void {
-    this.isLoadingNumbers = true;
-
+  private carregarNumeros(): void {
     forkJoin({
       numeroCredito: this.creditoService.getNextNumeroCredito(),
       numeroNfse: this.creditoService.getNextNumeroNfse()
     }).subscribe({
-      next: (response) => {
+      next: ({ numeroCredito, numeroNfse }) => {
         this.creditoForm.patchValue({
-          numeroCredito: response.numeroCredito,
-          numeroNfse: response.numeroNfse
+          numeroCredito: this.normalizeNumero(numeroCredito),
+          numeroNfse: this.normalizeNumero(numeroNfse)
         });
-        this.isLoadingNumbers = false;
       },
-      error: (error) => {
-        this.isLoadingNumbers = false;
-        const message = (error?.message || 'Erro desconhecido')
-          .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
-        this.toastService.error('Erro ao carregar números sequenciais: ' + message);
+      error: () => {
+        // Não bloquear o submit caso falhe (apenas UX)
       }
     });
+  }
+
+  private normalizeNumero(value: unknown): string {
+    if (typeof value !== 'string') {
+      return '';
+    }
+
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+      try {
+        const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+        const candidate = parsed?.['value'] ?? parsed?.['numeroCredito'] ?? parsed?.['numeroNfse'];
+        return typeof candidate === 'string' ? candidate : '';
+      } catch {
+        return trimmed;
+      }
+    }
+
+    return trimmed;
   }
 
   onFileSelected(event: Event): void {
@@ -132,65 +146,92 @@ export class CreditoCreateComponent implements OnInit {
         this.toastService.error('Tipo de arquivo não permitido. Use PDF, JPG ou PNG');
         this.comprovanteFile = null;
         this.fileName = '';
-        this.creditoForm.patchValue({ comprovanteRenda: null });
         input.value = '';
         return;
       }
 
       // Validar tamanho do arquivo
       if (file.size > MAX_FILE_SIZE) {
-        this.toastService.error(`Arquivo muito grande. Tamanho máximo: ${MAX_FILE_SIZE / (1024 * 1024)}MB`);
+        this.toastService.error('Comprovante excede 5MB');
         this.comprovanteFile = null;
         this.fileName = '';
-        this.creditoForm.patchValue({ comprovanteRenda: null });
         input.value = '';
         return;
       }
 
       this.comprovanteFile = file;
       this.fileName = file.name;
-      this.creditoForm.patchValue({ comprovanteRenda: file });
+    } else {
+      this.comprovanteFile = null;
+      this.fileName = '';
     }
   }
 
   onSubmit(): void {
-    if (this.creditoForm.invalid || !this.comprovanteFile) {
+    if (this.creditoForm.invalid) {
       this.markFormGroupTouched(this.creditoForm);
-      this.toastService.error('Por favor, preencha todos os campos corretamente e selecione o comprovante de renda');
+      this.toastService.error('Por favor, preencha todos os campos corretamente');
+      return;
+    }
+
+    if (this.comprovanteFile && this.comprovanteFile.size > MAX_SIZE_MB * 1024 * 1024) {
+      this.toastService.error('Comprovante excede 5MB');
       return;
     }
 
     this.isLoading = true;
 
-    const formValue = this.creditoForm.getRawValue();
-    const simplesNacional = formValue.simplesNacional === 'Sim' || formValue.simplesNacional === 'true';
+    const raw = this.creditoForm.getRawValue();
+    const simplesNacional = raw.simplesNacional === 'Sim' || raw.simplesNacional === 'true';
 
-    const dados = {
-      numeroCredito: formValue.numeroCredito,
-      numeroNfse: formValue.numeroNfse,
-      dataConstituicao: formValue.dataConstituicao,
-      valorIssqn: parseFloat(formValue.valorIssqn),
-      tipoCredito: formValue.tipoCredito,
-      simplesNacional: simplesNacional,
-      aliquota: parseFloat(formValue.aliquota),
-      valorFaturado: parseFloat(formValue.valorFaturado),
-      valorDeducao: parseFloat(formValue.valorDeducao),
-      baseCalculo: parseFloat(formValue.baseCalculo),
-      nomeSolicitante: formValue.nomeSolicitante
+    const creditoPayload = {
+      numeroCredito: null,
+      numeroNfse: null,
+      dataConstituicao: raw.dataConstituicao,
+      tipoCredito: raw.tipoCredito,
+      simplesNacional,
+      aliquota: Number(raw.aliquota),
+      valorFaturado: Number(raw.valorFaturado),
+      valorIssqn: Number(raw.valorIssqn),
+      valorDeducao: Number(raw.valorDeducao),
+      baseCalculo: Number(raw.baseCalculo),
+      solicitadoPor: raw.nomeSolicitante
     };
 
-    this.creditoWorkflowService.criarCredito(dados, this.comprovanteFile).subscribe({
-      next: (response) => {
+    const formData = new FormData();
+
+    formData.append(
+      'credito',
+      new Blob([JSON.stringify(creditoPayload)], {
+        type: 'application/json'
+      })
+    );
+
+    if (this.comprovanteFile) {
+      formData.append('comprovante', this.comprovanteFile);
+    }
+
+    this.creditoService.criarCredito(formData).subscribe({
+      next: (_response: CreditoAdminResponseDto) => {
         this.isLoading = false;
-        localStorage.setItem('nome-solicitante', dados.nomeSolicitante);
-        this.toastService.success('Crédito criado com sucesso! Status: EM_ANALISE');
-        this.resetForm();
+        this.toastService.success('Cadastro realizado com sucesso!');
+
+        const role = this.userRoleService.getRole();
+        if (role === 'admin-full') {
+          this.router.navigate(['/lista-geral-creditos']);
+        } else {
+          this.router.navigate(['/meus-creditos']);
+        }
       },
-      error: (error) => {
+      error: (error: HttpErrorResponse) => {
         this.isLoading = false;
-        const message = (error?.message || 'Erro ao criar crédito. Tente novamente.')
-          .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
-        this.toastService.error(message);
+
+        if (error.status === 413) {
+          this.toastService.error('Arquivo muito grande. Máx: 5MB');
+          return;
+        }
+
+        this.toastService.error(error.error?.message ?? 'Erro ao criar crédito');
       }
     });
   }
@@ -204,8 +245,7 @@ export class CreditoCreateComponent implements OnInit {
     this.comprovanteFile = null;
     this.fileName = '';
 
-    // Recarregar números sequenciais
-    this.carregarDadosIniciais();
+    this.carregarNumeros();
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {

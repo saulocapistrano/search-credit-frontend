@@ -80,9 +80,9 @@
                     <tr>
                       <th>Número do Crédito</th>
                       <th>Número NFSe</th>
-                      <th>Valor</th>
-                      <th>Data de Emissão</th>
-                      <th>Status</th>
+                      <th>Valor Faturado</th>
+                      <th>Data de Constituição</th>
+                      <th>Situação</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -98,22 +98,22 @@
                         <td>{{ credito.numeroCredito }}</td>
                         <td>{{ credito.numeroNfse }}</td>
                         <td>
-                          @if (credito.valor !== undefined && credito.valor !== null) {
-                            {{ credito.valor | currency:'BRL':'symbol':'1.2-2' }}
+                          @if (credito.valorFaturado !== undefined && credito.valorFaturado !== null) {
+                            {{ credito.valorFaturado | currency:'BRL':'symbol':'1.2-2' }}
                           } @else {
                             -
                           }
                         </td>
                         <td>
-                          @if (credito.dataEmissao) {
-                            {{ credito.dataEmissao | date:'dd/MM/yyyy' }}
+                          @if (credito.dataConstituicao) {
+                            {{ credito.dataConstituicao | date:'dd/MM/yyyy' }}
                           } @else {
                             -
                           }
                         </td>
                         <td>
-                          <span class="badge bg-{{ getStatusBadgeClass(credito.status) }}">
-                            {{ credito.status }}
+                          <span class="badge {{ creditoStatusService.getStatusBadgeClass(getSituacao(credito)) }}">
+                            {{ creditoStatusService.getStatusLabel(getSituacao(credito)) }}
                           </span>
                         </td>
                       </tr>
@@ -163,9 +163,9 @@
               </div>
               <div class="col-12 col-md-6">
                 <div class="detail-item">
-                  <label class="detail-label">Status:</label>
-                  <span class="badge bg-{{ getStatusBadgeClass(creditoSelecionado.status) }}">
-                    {{ creditoSelecionado.status }}
+                  <label class="detail-label">Situação:</label>
+                  <span class="badge {{ creditoStatusService.getStatusBadgeClass(getSituacao(creditoSelecionado)) }}">
+                    {{ creditoStatusService.getStatusLabel(getSituacao(creditoSelecionado)) }}
                   </span>
                 </div>
               </div>
@@ -238,22 +238,6 @@
                     } @else {
                       Não informado
                     }
-                  </span>
-                </div>
-              </div>
-              <div class="col-12 col-md-6">
-                <div class="detail-item">
-                  <label class="detail-label">Data de Emissão:</label>
-                  <span class="detail-value">
-                    {{ creditoSelecionado.dataEmissao | date:'dd/MM/yyyy' }}
-                  </span>
-                </div>
-              </div>
-              <div class="col-12 col-md-6">
-                <div class="detail-item">
-                  <label class="detail-label">Valor Total:</label>
-                  <span class="detail-value fw-bold">
-                    {{ creditoSelecionado.valor | currency:'BRL':'symbol':'1.2-2' }}
                   </span>
                 </div>
               </div>

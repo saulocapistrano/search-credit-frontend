@@ -1,0 +1,13 @@
+<div class="user-profile-selector">
+  <label for="roleSelect" class="form-label">Perfil:</label>
+  <select
+    id="roleSelect"
+    class="form-select form-select-sm"
+    [(ngModel)]="selectedRole"
+    (ngModelChange)="onRoleChange()">
+    @for (role of roles; track role.value) {
+      <option [value]="role.value">{{ role.label }}</option>
+    }
+  </select>
+</div>
+

@@ -2,7 +2,11 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { CreditoService } from '../../core/services/credito.service';
+import { CreditoCacheService } from '../../core/services/credito-cache.service';
+import { CreditoStatusService } from '../../core/services/credito-status.service';
 import { CreditoResponseDto } from '../../core/models/credito-response.dto';
+import { Observable, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-consulta-nfse',
@@ -13,6 +17,8 @@ import { CreditoResponseDto } from '../../core/models/credito-response.dto';
 })
 export class ConsultaNfseComponent {
   private readonly creditoService = inject(CreditoService);
+  private readonly creditoCacheService = inject(CreditoCacheService);
+  readonly creditoStatusService = inject(CreditoStatusService);
   private readonly formBuilder = inject(FormBuilder);
 
   consultaForm: FormGroup;
@@ -67,10 +73,14 @@ export class ConsultaNfseComponent {
     this.hasSearched = true;
     this.atualizarEstadoFormulario();
 
-    this.creditoService.buscarPorNumeroNfse(numeroNfse).subscribe({
+    this.creditoService.buscarPorNumeroNfse(numeroNfse).pipe(
+      switchMap((resultado) => this.enriquecerCreditosComSituacao(resultado))
+    ).subscribe({
       next: (resultado) => {
         this.isLoading = false;
         this.creditos = resultado;
+        // Armazenar créditos no cache
+        this.creditoCacheService.adicionarCreditos(resultado);
         this.atualizarEstadoFormulario();
         if (resultado.length === 0) {
           this.errorMessage = 'Nenhum crédito encontrado para o número de NFSe informado';
@@ -78,11 +88,63 @@ export class ConsultaNfseComponent {
       },
       error: (error) => {
         this.isLoading = false;
-        this.errorMessage = error.message || 'Erro ao buscar créditos';
+        const message = (error?.message || 'Erro ao buscar créditos')
+          .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
+        this.errorMessage = message;
         this.creditos = [];
         this.atualizarEstadoFormulario();
       }
     });
+  }
+
+  private enriquecerCreditosComSituacao(creditos: CreditoResponseDto[]): Observable<CreditoResponseDto[]> {
+    const normalized: CreditoResponseDto[] = (creditos || []).map((c) => ({
+      id: typeof c?.id === 'number' ? c.id : (parseInt((c as unknown as { numeroCredito?: string })?.numeroCredito || '0', 10) || 0),
+      numeroNfse: (c as unknown as { numeroNfse?: string })?.numeroNfse || '',
+      numeroCredito: (c as unknown as { numeroCredito?: string })?.numeroCredito || '',
+      valor: typeof (c as unknown as { valor?: number })?.valor === 'number' ? (c as unknown as { valor?: number })?.valor as number : 0,
+      dataEmissao: (c as unknown as { dataEmissao?: string })?.dataEmissao || '',
+      status: (c as unknown as { status?: string })?.status || '',
+      situacao: (c as unknown as { situacao?: string })?.situacao,
+      dataConstituicao: (c as unknown as { dataConstituicao?: string })?.dataConstituicao,
+      valorIssqn: (c as unknown as { valorIssqn?: number })?.valorIssqn,
+      tipoCredito: (c as unknown as { tipoCredito?: string })?.tipoCredito,
+      simplesNacional: (c as unknown as { simplesNacional?: boolean })?.simplesNacional,
+      aliquota: (c as unknown as { aliquota?: number })?.aliquota,
+      valorFaturado: (c as unknown as { valorFaturado?: number })?.valorFaturado,
+      valorDeducao: (c as unknown as { valorDeducao?: number })?.valorDeducao,
+      baseCalculo: (c as unknown as { baseCalculo?: number })?.baseCalculo
+    }));
+
+    if (normalized.length === 0) {
+      return of([]);
+    }
+
+    return this.creditoService.buscarCreditosPaginados(0, 500, 'dataConstituicao', 'DESC').pipe(
+      map((page) => page?.content || []),
+      catchError(() => of([])),
+      map((creditosComSituacao) => {
+        const byNumero = new Map(
+          (creditosComSituacao || [])
+            .filter((c) => !!c?.numeroCredito)
+            .map((c) => [c.numeroCredito, c])
+        );
+
+        return normalized.map((c) => {
+          const match = byNumero.get(c.numeroCredito);
+          if (!match) {
+            return c;
+          }
+
+          const m = match as unknown as { status?: string; situacao?: string };
+          return {
+            ...c,
+            status: m.status || c.status,
+            situacao: m.situacao || c.situacao
+          };
+        });
+      })
+    );
   }
 
   limpar(): void {
@@ -97,7 +159,6 @@ export class ConsultaNfseComponent {
   }
 
   exibirDetalhes(credito: CreditoResponseDto): void {
-    console.log('Crédito selecionado:', credito);
     this.creditoSelecionado = credito;
     this.mostrarDetalhes = true;
   }
@@ -125,6 +186,10 @@ export class ConsultaNfseComponent {
     return `${valor}%`;
   }
 
+  getSituacao(credito: unknown): string {
+    return this.creditoStatusService.extractSituacao(credito);
+  }
+
   temErro(campo: string): boolean {
     const control = this.consultaForm.get(campo);
     return !!(control && control.invalid && control.touched);
@@ -143,19 +208,4 @@ export class ConsultaNfseComponent {
     return null;
   }
 
-  getStatusBadgeClass(status: string): string {
-    const statusLower = status?.toLowerCase() || '';
-
-    if (statusLower.includes('ativo') || statusLower.includes('aprovado')) {
-      return 'success';
-    }
-    if (statusLower.includes('pendente') || statusLower.includes('processando')) {
-      return 'warning';
-    }
-    if (statusLower.includes('cancelado') || statusLower.includes('rejeitado')) {
-      return 'danger';
-    }
-
-    return 'secondary';
-  }
 }

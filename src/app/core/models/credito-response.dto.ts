@@ -5,6 +5,7 @@ export interface CreditoResponseDto {
   valor: number;
   dataEmissao: string;
   status: string;
+  situacao?: string;
   dataConstituicao?: string;
   valorIssqn?: number;
   tipoCredito?: string;

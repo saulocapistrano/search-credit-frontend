@@ -14,3 +14,28 @@ body {
 html, body {
   height: 100%;
 }
+
+.badge.status-constituido {
+  color: #6c757d;
+  background-color: rgba(108, 117, 125, 0.15);
+}
+
+.badge.status-em-analise {
+  color: #000;
+  background-color: rgba(255, 193, 7, 0.25);
+}
+
+.badge.status-aprovado {
+  color: #198754;
+  background-color: rgba(25, 135, 84, 0.15);
+}
+
+.badge.status-reprovado {
+  color: #dc3545;
+  background-color: rgba(220, 53, 69, 0.15);
+}
+
+.badge.status-desconhecido {
+  color: #fd7e14;
+  background-color: rgba(253, 126, 20, 0.15);
+}

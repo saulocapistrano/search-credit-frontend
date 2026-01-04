@@ -16,55 +16,10 @@
             <small class="text-muted">Status: <strong>EM_ANALISE</strong></small>
           </div>
           <div class="card-body">
-            @if (isLoadingNumbers) {
-              <div class="text-center mb-3">
-                <div class="spinner-border spinner-border-sm text-primary" role="status">
-                  <span class="visually-hidden">Carregando...</span>
-                </div>
-                <span class="ms-2">Carregando números sequenciais...</span>
-              </div>
-            }
-
             <form [formGroup]="creditoForm" (ngSubmit)="onSubmit()">
+              <input type="hidden" formControlName="numeroCredito">
+              <input type="hidden" formControlName="numeroNfse">
               <div class="row">
-                <!-- Número do Crédito (Readonly) -->
-                <div class="col-md-6 mb-3">
-                  <label for="numeroCredito" class="form-label">
-                    Número do Crédito <span class="text-danger">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    [class.is-invalid]="isFieldInvalid('numeroCredito')"
-                    id="numeroCredito"
-                    formControlName="numeroCredito"
-                    readonly>
-                  @if (isFieldInvalid('numeroCredito')) {
-                    <div class="invalid-feedback">
-                      {{ getFieldError('numeroCredito') }}
-                    </div>
-                  }
-                </div>
-
-                <!-- Número NFSe (Readonly) -->
-                <div class="col-md-6 mb-3">
-                  <label for="numeroNfse" class="form-label">
-                    Número NFSe <span class="text-danger">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    class="form-control"
-                    [class.is-invalid]="isFieldInvalid('numeroNfse')"
-                    id="numeroNfse"
-                    formControlName="numeroNfse"
-                    readonly>
-                  @if (isFieldInvalid('numeroNfse')) {
-                    <div class="invalid-feedback">
-                      {{ getFieldError('numeroNfse') }}
-                    </div>
-                  }
-                </div>
-
                 <!-- Data de Constituição -->
                 <div class="col-md-6 mb-3">
                   <label for="dataConstituicao" class="form-label">
@@ -267,20 +222,14 @@
                 <!-- Comprovante de Renda -->
                 <div class="col-md-12 mb-3">
                   <label for="comprovanteRenda" class="form-label">
-                    Comprovante de Renda <span class="text-danger">*</span>
+                    Comprovante de Renda
                   </label>
                   <input
                     type="file"
                     class="form-control"
-                    [class.is-invalid]="isFieldInvalid('comprovanteRenda')"
                     id="comprovanteRenda"
                     accept=".pdf,.jpg,.jpeg,.png"
                     (change)="onFileSelected($event)">
-                  @if (isFieldInvalid('comprovanteRenda')) {
-                    <div class="invalid-feedback">
-                      {{ getFieldError('comprovanteRenda') }}
-                    </div>
-                  }
                   <small class="form-text text-muted">
                     Formatos aceitos: PDF, JPG, PNG. Tamanho máximo: 5MB
                   </small>
@@ -305,7 +254,7 @@
                 <button
                   type="submit"
                   class="btn btn-primary"
-                  [disabled]="creditoForm.invalid || !comprovanteFile || isLoading || isLoadingNumbers">
+                  [disabled]="creditoForm.invalid || isLoading">
                   @if (isLoading) {
                     <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
                     Enviando...

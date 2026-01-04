@@ -117,10 +117,10 @@
             </div>
             <div class="col-12 col-md-6">
               <div class="detail-item">
-                <label class="detail-label">Status:</label>
-                @if (credito.status) {
-                  <span class="badge {{ creditoStatusService.getStatusBadgeClass(credito.status) }}">
-                    {{ creditoStatusService.getStatusLabel(credito.status) }}
+                <label class="detail-label">Situação:</label>
+                @if (getSituacao(credito)) {
+                  <span class="badge {{ creditoStatusService.getStatusBadgeClass(getSituacao(credito)) }}">
+                    {{ creditoStatusService.getStatusLabel(getSituacao(credito)) }}
                   </span>
                 } @else {
                   <span class="detail-value">Não informado</span>
@@ -193,30 +193,6 @@
                 <span class="detail-value">
                   @if (credito.dataConstituicao) {
                     {{ credito.dataConstituicao | date:'dd/MM/yyyy' }}
-                  } @else {
-                    Não informado
-                  }
-                </span>
-              </div>
-            </div>
-            <div class="col-12 col-md-6">
-              <div class="detail-item">
-                <label class="detail-label">Data de Emissão:</label>
-                <span class="detail-value">
-                  @if (credito.dataEmissao) {
-                    {{ credito.dataEmissao | date:'dd/MM/yyyy' }}
-                  } @else {
-                    Não informado
-                  }
-                </span>
-              </div>
-            </div>
-            <div class="col-12 col-md-6">
-              <div class="detail-item">
-                <label class="detail-label">Valor Total:</label>
-                <span class="detail-value fw-bold">
-                  @if (credito.valor !== undefined && credito.valor !== null) {
-                    {{ credito.valor | currency:'BRL':'symbol':'1.2-2' }}
                   } @else {
                     Não informado
                   }

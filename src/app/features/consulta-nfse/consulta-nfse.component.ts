@@ -5,6 +5,8 @@ import { CreditoService } from '../../core/services/credito.service';
 import { CreditoCacheService } from '../../core/services/credito-cache.service';
 import { CreditoStatusService } from '../../core/services/credito-status.service';
 import { CreditoResponseDto } from '../../core/models/credito-response.dto';
+import { Observable, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-consulta-nfse',
@@ -71,7 +73,9 @@ export class ConsultaNfseComponent {
     this.hasSearched = true;
     this.atualizarEstadoFormulario();
 
-    this.creditoService.buscarPorNumeroNfse(numeroNfse).subscribe({
+    this.creditoService.buscarPorNumeroNfse(numeroNfse).pipe(
+      switchMap((resultado) => this.enriquecerCreditosComSituacao(resultado))
+    ).subscribe({
       next: (resultado) => {
         this.isLoading = false;
         this.creditos = resultado;
@@ -91,6 +95,56 @@ export class ConsultaNfseComponent {
         this.atualizarEstadoFormulario();
       }
     });
+  }
+
+  private enriquecerCreditosComSituacao(creditos: CreditoResponseDto[]): Observable<CreditoResponseDto[]> {
+    const normalized: CreditoResponseDto[] = (creditos || []).map((c) => ({
+      id: typeof c?.id === 'number' ? c.id : (parseInt((c as unknown as { numeroCredito?: string })?.numeroCredito || '0', 10) || 0),
+      numeroNfse: (c as unknown as { numeroNfse?: string })?.numeroNfse || '',
+      numeroCredito: (c as unknown as { numeroCredito?: string })?.numeroCredito || '',
+      valor: typeof (c as unknown as { valor?: number })?.valor === 'number' ? (c as unknown as { valor?: number })?.valor as number : 0,
+      dataEmissao: (c as unknown as { dataEmissao?: string })?.dataEmissao || '',
+      status: (c as unknown as { status?: string })?.status || '',
+      situacao: (c as unknown as { situacao?: string })?.situacao,
+      dataConstituicao: (c as unknown as { dataConstituicao?: string })?.dataConstituicao,
+      valorIssqn: (c as unknown as { valorIssqn?: number })?.valorIssqn,
+      tipoCredito: (c as unknown as { tipoCredito?: string })?.tipoCredito,
+      simplesNacional: (c as unknown as { simplesNacional?: boolean })?.simplesNacional,
+      aliquota: (c as unknown as { aliquota?: number })?.aliquota,
+      valorFaturado: (c as unknown as { valorFaturado?: number })?.valorFaturado,
+      valorDeducao: (c as unknown as { valorDeducao?: number })?.valorDeducao,
+      baseCalculo: (c as unknown as { baseCalculo?: number })?.baseCalculo
+    }));
+
+    if (normalized.length === 0) {
+      return of([]);
+    }
+
+    return this.creditoService.buscarCreditosPaginados(0, 500, 'dataConstituicao', 'DESC').pipe(
+      map((page) => page?.content || []),
+      catchError(() => of([])),
+      map((creditosComSituacao) => {
+        const byNumero = new Map(
+          (creditosComSituacao || [])
+            .filter((c) => !!c?.numeroCredito)
+            .map((c) => [c.numeroCredito, c])
+        );
+
+        return normalized.map((c) => {
+          const match = byNumero.get(c.numeroCredito);
+          if (!match) {
+            return c;
+          }
+
+          const m = match as unknown as { status?: string; situacao?: string };
+          return {
+            ...c,
+            status: m.status || c.status,
+            situacao: m.situacao || c.situacao
+          };
+        });
+      })
+    );
   }
 
   limpar(): void {
@@ -130,6 +184,10 @@ export class ConsultaNfseComponent {
       return 'Não informado';
     }
     return `${valor}%`;
+  }
+
+  getSituacao(credito: unknown): string {
+    return this.creditoStatusService.extractSituacao(credito);
   }
 
   temErro(campo: string): boolean {

@@ -2,9 +2,7 @@ import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Subscription } from 'rxjs';
-import { CreditoService } from '../../core/services/credito.service';
-import { CreditoCacheService } from '../../core/services/credito-cache.service';
+import { CreditoService, PageResponse } from '../../core/services/credito.service';
 import { CreditoStatusService } from '../../core/services/credito-status.service';
 import { UserRoleService } from '../../core/services/user-role.service';
 import { ToastService } from '../../core/services/toast.service';
@@ -20,29 +18,26 @@ import { CreditoDetalhadoDto } from '../../core/models/credito-detalhado.dto';
 })
 export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
   private readonly creditoService = inject(CreditoService);
-  private readonly creditoCacheService = inject(CreditoCacheService);
   readonly creditoStatusService = inject(CreditoStatusService);
   private readonly userRoleService = inject(UserRoleService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
-  private cacheSubscription?: Subscription;
 
   creditos: CreditoResponseDto[] = [];
-  creditosFiltrados: CreditoResponseDto[] = [];
-  termoBusca = '';
   canAccess = false;
 
-  currentPage = 0;
-  pageSize = 10;
-  totalElements = 0;
-  totalPages = 0;
+  paginaAtual = 0;
+  pageSize = 20;
+  totalRegistros = 0;
+  totalPaginas = 0;
 
-  sortBy = 'dataEmissao';
-  sortDir: 'asc' | 'desc' = 'desc';
+  sortBy = 'dataConstituicao';
+  sortDir = 'DESC';
 
   creditoSelecionado: CreditoDetalhadoDto | null = null;
   mostrarDetalhes = false;
   isLoadingDetalhes = false;
+  isLoadingLista = false;
 
   ngOnInit(): void {
     const role = this.userRoleService.getRole();
@@ -53,130 +48,47 @@ export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
       return;
     }
 
-    // Carregar créditos do cache
-    this.carregarCreditosDoCache();
-
-    // Escutar mudanças no cache
-    this.cacheSubscription = this.creditoCacheService.creditos$.subscribe(() => {
-      this.carregarCreditosDoCache();
-    });
+    this.carregarCreditos(0);
   }
 
   ngOnDestroy(): void {
-    this.cacheSubscription?.unsubscribe();
+    return;
   }
 
-  carregarCreditosDoCache(): void {
-    this.creditos = this.creditoCacheService.obterTodosCreditos();
-    this.aplicarFiltroEBusca();
-  }
+  private carregarCreditos(page: number): void {
+    this.isLoadingLista = true;
 
-  onBuscaChange(termo: string): void {
-    this.termoBusca = termo;
-    this.currentPage = 0;
-    this.aplicarFiltroEBusca();
-  }
-
-  aplicarFiltroEBusca(): void {
-    let resultado = [...this.creditos];
-
-    // Aplicar filtro de busca
-    if (this.termoBusca && this.termoBusca.trim() !== '') {
-      const termoLower = this.termoBusca.toLowerCase().trim();
-      resultado = resultado.filter(credito => {
-        const numeroCredito = credito.numeroCredito?.toLowerCase() || '';
-        const numeroNfse = credito.numeroNfse?.toLowerCase() || '';
-        const tipoCredito = credito.tipoCredito?.toLowerCase() || '';
-        const status = credito.status?.toLowerCase() || '';
-        const valorIssqn = credito.valorIssqn?.toString() || '';
-
-        return numeroCredito.includes(termoLower) ||
-               numeroNfse.includes(termoLower) ||
-               tipoCredito.includes(termoLower) ||
-               status.includes(termoLower) ||
-               valorIssqn.includes(termoLower);
-      });
-    }
-
-    // Aplicar ordenação
-    resultado = this.ordenarCreditos(resultado);
-
-    // Atualizar totais
-    this.totalElements = resultado.length;
-    this.totalPages = Math.ceil(this.totalElements / this.pageSize);
-
-    // Aplicar paginação
-    const startIndex = this.currentPage * this.pageSize;
-    const endIndex = startIndex + this.pageSize;
-    this.creditosFiltrados = resultado.slice(startIndex, endIndex);
-  }
-
-  ordenarCreditos(creditos: CreditoResponseDto[]): CreditoResponseDto[] {
-    return [...creditos].sort((a, b) => {
-      let valorA: any;
-      let valorB: any;
-
-      switch (this.sortBy) {
-        case 'numeroCredito':
-          valorA = a.numeroCredito || '';
-          valorB = b.numeroCredito || '';
-          break;
-        case 'numeroNfse':
-          valorA = a.numeroNfse || '';
-          valorB = b.numeroNfse || '';
-          break;
-        case 'tipoCredito':
-          valorA = a.tipoCredito || '';
-          valorB = b.tipoCredito || '';
-          break;
-        case 'valorIssqn':
-          valorA = a.valorIssqn || 0;
-          valorB = b.valorIssqn || 0;
-          break;
-        case 'dataConstituicao':
-          valorA = a.dataConstituicao ? new Date(a.dataConstituicao).getTime() : 0;
-          valorB = b.dataConstituicao ? new Date(b.dataConstituicao).getTime() : 0;
-          break;
-        case 'status':
-          valorA = a.status || '';
-          valorB = b.status || '';
-          break;
-        case 'dataEmissao':
-        default:
-          valorA = a.dataEmissao ? new Date(a.dataEmissao).getTime() : 0;
-          valorB = b.dataEmissao ? new Date(b.dataEmissao).getTime() : 0;
-          break;
-      }
-
-      if (typeof valorA === 'string' && typeof valorB === 'string') {
-        return this.sortDir === 'asc'
-          ? valorA.localeCompare(valorB)
-          : valorB.localeCompare(valorA);
-      } else {
-        return this.sortDir === 'asc'
-          ? valorA - valorB
-          : valorB - valorA;
+    this.creditoService.buscarCreditosPaginados(page, this.pageSize, this.sortBy, this.sortDir).subscribe({
+      next: (response: PageResponse<CreditoResponseDto>) => {
+        this.creditos = response.content;
+        this.totalRegistros = response.totalElements;
+        this.totalPaginas = response.totalPages;
+        this.paginaAtual = response.number;
+        this.isLoadingLista = false;
+      },
+      error: (error: unknown) => {
+        this.isLoadingLista = false;
+        const message = error instanceof Error ? error.message : 'Erro ao carregar créditos';
+        this.toastService.error(message);
       }
     });
   }
 
   onPageChange(page: number): void {
-    if (page >= 0 && page < this.totalPages) {
-      this.currentPage = page;
-      this.aplicarFiltroEBusca();
+    if (page >= 0 && page < this.totalPaginas) {
+      this.carregarCreditos(page);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
   onSort(field: string): void {
     if (this.sortBy === field) {
-      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+      this.sortDir = this.sortDir === 'ASC' ? 'DESC' : 'ASC';
     } else {
       this.sortBy = field;
-      this.sortDir = 'desc';
+      this.sortDir = 'DESC';
     }
-    this.currentPage = 0;
-    this.aplicarFiltroEBusca();
+    this.carregarCreditos(0);
   }
 
   formatarData(data: string | undefined): string {
@@ -205,14 +117,14 @@ export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
     if (this.sortBy !== field) {
       return 'fa-sort';
     }
-    return this.sortDir === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
+    return this.sortDir === 'ASC' ? 'fa-sort-up' : 'fa-sort-down';
   }
 
   getPageNumbers(): number[] {
     const pages: number[] = [];
     const maxVisible = 5;
-    let start = Math.max(0, this.currentPage - Math.floor(maxVisible / 2));
-    let end = Math.min(this.totalPages - 1, start + maxVisible - 1);
+    let start = Math.max(0, this.paginaAtual - Math.floor(maxVisible / 2));
+    let end = Math.min(this.totalPaginas - 1, start + maxVisible - 1);
 
     if (end - start < maxVisible - 1) {
       start = Math.max(0, end - maxVisible + 1);
@@ -235,7 +147,7 @@ export class ListaGeralCreditosComponent implements OnInit, OnDestroy {
     this.creditoSelecionado = null;
 
     this.creditoService.buscarPorNumeroCredito(credito.numeroCredito).subscribe({
-      next: (resultado) => {
+      next: (resultado: CreditoDetalhadoDto) => {
         this.isLoadingDetalhes = false;
         this.creditoSelecionado = resultado;
         this.mostrarDetalhes = true;

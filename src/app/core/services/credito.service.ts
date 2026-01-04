@@ -7,6 +7,37 @@ import { CreditoResponseDto } from '../models/credito-response.dto';
 import { CreditoDetalhadoDto } from '../models/credito-detalhado.dto';
 import { CreditoWorkflowResponseDto } from '../models/credito-workflow.dto';
 
+export type CreditoCreateRequestDto = {
+  numeroNfse: string;
+  dataConstituicao: string;
+  valorIssqn: number;
+  tipoCredito: string;
+  simplesNacional: boolean;
+  aliquota: number;
+  valorFaturado: number;
+  valorDeducao: number;
+  baseCalculo: number;
+  solicitadoPor: string;
+};
+
+export type CreditoAdminResponseDto = {
+  id?: number;
+  numeroCredito: string;
+  numeroNfse: string;
+  dataConstituicao: string;
+  valorIssqn: number;
+  tipoCredito: string;
+  simplesNacional: string;
+  aliquota: number;
+  valorFaturado: number;
+  valorDeducao: number;
+  baseCalculo: number;
+  nomeSolicitante?: string;
+  status: string;
+  comprovanteRendaUrl?: string;
+  dataSolicitacao?: string;
+};
+
 export type PageResponse<T> = {
   content: T[];
   totalElements: number;
@@ -86,6 +117,10 @@ export class CreditoService {
     _size: number = 10
   ): Observable<{ content: CreditoWorkflowResponseDto[]; totalElements: number; totalPages: number; size: number; number: number }> {
     return throwError(() => new Error('Operação não suportada pela API atual. Utilize a busca por NFSe ou Número do Crédito.'));
+  }
+
+  criarCredito(formData: FormData): Observable<CreditoAdminResponseDto> {
+    return this.http.post<CreditoAdminResponseDto>('/api/creditos', formData);
   }
 
   private handleError(error: HttpErrorResponse): Observable<never> {

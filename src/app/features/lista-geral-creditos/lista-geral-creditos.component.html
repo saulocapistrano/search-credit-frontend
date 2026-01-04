@@ -9,42 +9,31 @@
     <div class="row mb-4">
       <div class="col-12">
         <h2 class="mb-0">Lista Geral de Créditos</h2>
-        <p class="text-muted mt-2">Visualização administrativa de todos os créditos existentes na base de dados</p>
+        <p class="text-muted mt-2">Lista consolidada dos créditos consultados no sistema</p>
       </div>
     </div>
 
-    <!-- Campo de busca genérico -->
-    <div class="row mb-3">
-      <div class="col-12 col-md-6">
-        <input
-          type="text"
-          class="form-control"
-          placeholder="Digite qualquer valor para filtrar"
-          [value]="termoBusca"
-          (input)="onBuscaChange($any($event.target).value)"
-          autocomplete="off">
+    @if (isLoadingLista) {
+      <div class="text-center py-4">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Carregando...</span>
+        </div>
+        <p class="mt-3 text-muted">Carregando créditos...</p>
       </div>
-    </div>
-
-    @if (creditos.length === 0) {
+    } @else if (totalRegistros === 0) {
       <div class="alert alert-info">
         <i class="fas fa-info-circle me-2"></i>
-        Nenhum crédito encontrado no cache. Realize consultas por NFSe ou Número do Crédito para popular a lista.
-      </div>
-    } @else if (creditosFiltrados.length === 0 && termoBusca) {
-      <div class="alert alert-warning">
-        <i class="fas fa-search me-2"></i>
-        Nenhum crédito encontrado com o termo de busca "{{ termoBusca }}".
+        Nenhum crédito encontrado.
       </div>
     } @else {
       <div class="card">
         <div class="card-body">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-              <span class="text-muted">Total de registros: <strong>{{ totalElements }}</strong></span>
+              <span class="text-muted">Total de registros: <strong>{{ totalRegistros }}</strong></span>
             </div>
             <div class="text-muted">
-              Página {{ currentPage + 1 }} de {{ totalPages }}
+              Página {{ paginaAtual + 1 }} de {{ totalPaginas }}
             </div>
           </div>
 
@@ -79,7 +68,7 @@
                 </tr>
               </thead>
               <tbody>
-                @for (credito of creditosFiltrados; track credito.id) {
+                @for (credito of creditos; track credito.numeroCredito) {
                   <tr style="cursor: pointer;" (click)="exibirDetalhes(credito)" title="Clique para ver detalhes">
                     <td>{{ credito.numeroCredito }}</td>
                     <td>{{ credito.numeroNfse }}</td>
@@ -98,25 +87,25 @@
           </div>
 
           <!-- Paginação -->
-          @if (totalPages > 1) {
+          @if (totalPaginas > 1) {
             <nav aria-label="Navegação de páginas" class="mt-4">
               <ul class="pagination justify-content-center">
-                <li class="page-item" [class.disabled]="currentPage === 0">
-                  <a class="page-link" (click)="onPageChange(currentPage - 1)" href="javascript:void(0)">
+                <li class="page-item" [class.disabled]="paginaAtual === 0">
+                  <a class="page-link" (click)="onPageChange(paginaAtual - 1)" href="javascript:void(0)">
                     <i class="fas fa-chevron-left"></i> Anterior
                   </a>
                 </li>
 
                 @for (page of getPageNumbers(); track page) {
-                  <li class="page-item" [class.active]="page === currentPage">
+                  <li class="page-item" [class.active]="page === paginaAtual">
                     <a class="page-link" (click)="onPageChange(page)" href="javascript:void(0)">
                       {{ page + 1 }}
                     </a>
                   </li>
                 }
 
-                <li class="page-item" [class.disabled]="currentPage >= totalPages - 1">
-                  <a class="page-link" (click)="onPageChange(currentPage + 1)" href="javascript:void(0)">
+                <li class="page-item" [class.disabled]="paginaAtual >= totalPaginas - 1">
+                  <a class="page-link" (click)="onPageChange(paginaAtual + 1)" href="javascript:void(0)">
                     Próxima <i class="fas fa-chevron-right"></i>
                   </a>
                 </li>

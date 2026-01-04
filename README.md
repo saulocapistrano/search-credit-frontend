@@ -2,6 +2,17 @@
 
 Aplicação web desenvolvida em Angular para consulta e visualização de créditos fiscais através de número de NFS-e ou número do crédito.
 
+## Perfis do Sistema
+
+- **Admin Consulta**
+  - Consulta créditos
+  - Visualiza detalhes
+- **Admin Crédito**
+  - Cria solicitações de crédito
+- **Admin Full**
+  - Aprova ou reprova créditos manualmente
+  - Tem precedência sobre decisões automáticas
+
 ## Links dos Repositórios
 
 - **Backend:** https://github.com/saulocapistrano/search-credit

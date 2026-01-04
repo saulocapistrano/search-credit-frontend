@@ -2,7 +2,6 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { CreditoService } from '../../core/services/credito.service';
 import { CreditoWorkflowService } from '../../core/services/credito-workflow.service';
 import { CreditoStatusService } from '../../core/services/credito-status.service';
 import { UserRoleService } from '../../core/services/user-role.service';
@@ -18,7 +17,6 @@ import { AnaliseCreditoDto } from '../../core/models/analise-credito.dto';
   styleUrl: './lista-geral-creditos-admin.component.scss'
 })
 export class ListaGeralCreditosAdminComponent implements OnInit {
-  private readonly creditoService = inject(CreditoService);
   private readonly creditoWorkflowService = inject(CreditoWorkflowService);
   readonly creditoStatusService = inject(CreditoStatusService);
   private readonly userRoleService = inject(UserRoleService);
@@ -56,33 +54,11 @@ export class ListaGeralCreditosAdminComponent implements OnInit {
       decisao: ['', [Validators.required]],
       comentario: ['']
     });
-
-    this.carregarCreditos();
-  }
-
-  carregarCreditos(): void {
-    this.isLoading = true;
-
-    this.creditoService.buscarTodasSolicitacoes(this.currentPage, this.pageSize, this.sortBy, this.sortDir).subscribe({
-      next: (response) => {
-        this.creditos = response.content || [];
-        this.totalElements = response.totalElements || 0;
-        this.totalPages = response.totalPages || 0;
-        this.isLoading = false;
-      },
-      error: (error) => {
-        this.isLoading = false;
-        const message = (error?.message || 'Erro desconhecido')
-          .replace(/solicita(ç|c)[aã]o de cr(é|e)dito/gi, 'crédito');
-        this.toastService.error('Erro ao carregar créditos: ' + message);
-      }
-    });
   }
 
   onPageChange(page: number): void {
     if (page >= 0 && page < this.totalPages) {
       this.currentPage = page;
-      this.carregarCreditos();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
@@ -95,7 +71,6 @@ export class ListaGeralCreditosAdminComponent implements OnInit {
       this.sortDir = 'desc';
     }
     this.currentPage = 0;
-    this.carregarCreditos();
   }
 
   verComprovante(comprovanteUrl: string): void {
@@ -200,8 +175,6 @@ export class ListaGeralCreditosAdminComponent implements OnInit {
             this.creditos[index].status = analise.status;
           }
         }
-
-        this.carregarCreditos();
         this.fecharModalAnalise();
       },
       error: (error) => {
